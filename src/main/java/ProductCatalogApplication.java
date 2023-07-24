@@ -1,5 +1,3 @@
-package kumuluz.ee.master.master.microservice.simple;
-
 import com.kumuluz.ee.discovery.annotations.RegisterService;
 
 import javax.ws.rs.ApplicationPath;

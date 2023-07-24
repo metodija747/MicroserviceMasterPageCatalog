@@ -1,5 +1,3 @@
-package kumuluz.ee.master.master.microservice.simple;
-
 import com.auth0.jwk.Jwk;
 import com.auth0.jwk.JwkException;
 import com.auth0.jwk.JwkProvider;

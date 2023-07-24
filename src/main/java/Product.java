@@ -1,5 +1,3 @@
-package kumuluz.ee.master.master.microservice.simple;
-
 public class Product {
     private String productId;
     private String categoryName;

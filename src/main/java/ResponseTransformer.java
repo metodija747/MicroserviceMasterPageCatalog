@@ -1,5 +1,3 @@
-package kumuluz.ee.master.master.microservice.simple;
-
 import com.google.gson.*;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 

@@ -1,5 +1,3 @@
-package kumuluz.ee.master.master.microservice.simple;
-
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -39,7 +37,7 @@ public class CatalogResource {
                                 @QueryParam("page") Integer page,
                                 @QueryParam("pageSize") Integer pageSize) {
         String tableName = "ProductCatalog";
-        LOGGER.info("DynamoDB response: " + productCommentsUrl);
+//        LOGGER.info("DynamoDB response: " + productCommentsUrl);
         try {
             // Default values for page and pageSize if they are not provided
             if (page == null) {
@@ -189,12 +187,13 @@ public class CatalogResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response updateProductRating(@PathParam("productId") String productId,
                                         @HeaderParam("Auth") String token,
-                                        double avgRating) {
+                                        double avgRating,
+                                        @QueryParam("action") String action) {
         // Parse the token from the Authorization header
         LOGGER.info("DynamoDB response: " + token);
         LOGGER.info("DynamoDB response: " + avgRating);
         LOGGER.info("DynamoDB response: " + productId);
-
+        LOGGER.info("DynamoDB response: " + action);
 
         // Verify the token and get the  user's groups
         List<String> groups = null;
@@ -220,7 +219,7 @@ public class CatalogResource {
                     .action(AttributeAction.PUT)
                     .build());
             attributeUpdates.put("commentsCount", AttributeValueUpdate.builder()
-                    .value(AttributeValue.builder().n(String.valueOf(1)).build())
+                    .value(AttributeValue.builder().n(action.equals("add") ? "1" : "-1").build())
                     .action(AttributeAction.ADD)
                     .build());
 
