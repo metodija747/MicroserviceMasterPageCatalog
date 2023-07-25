@@ -8,7 +8,7 @@ kumuluzee:
         expose-headers: ""  # Headers that are exposed to the client
         max-age: 15  # Maximum age (in seconds) of the CORS preflight request
         allow-credentials: false  # Whether cookies are allowed
-  name: product-service
+  name: catalog-service
   version: 1.0.0
   env:
     name: dev
@@ -17,4 +17,4 @@ kumuluzee:
       port: 8080
   discovery:
     etcd:
-      hosts: http://localhost:2379
+      hosts: http://etcd-client:2379

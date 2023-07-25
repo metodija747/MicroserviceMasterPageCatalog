@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalog-microservice
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: catalog-microservice
+  template:
+    metadata:
+      labels:
+        app: catalog-microservice
+    spec:
+      containers:
+        - name: catalog-microservice
+          image: 2741/catalog-microservice:latest
+          ports:
+            - containerPort: 8080
