@@ -22,6 +22,9 @@ public class CatalogResource {
     @DiscoverService(value = "comment-service", environment = "dev", version = "1.0.0")
     private Optional<URL> productCommentsUrl;
 
+    @Inject
+    @DiscoverService(value = "cart-service", environment = "dev", version = "1.0.0")
+    private Optional<URL> cartServiceUrl;
 
     private DynamoDbClient dynamoDB = DynamoDbClient.builder()
             .region(Region.US_EAST_1)
