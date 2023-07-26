@@ -221,8 +221,14 @@ public class CatalogResource {
                     .value(AttributeValue.builder().n(String.valueOf(avgRating)).build())
                     .action(AttributeAction.PUT)
                     .build());
+
+            Map<String, String> updateValues = new HashMap<>();
+            updateValues.put("add", "1");
+            updateValues.put("delete", "-1");
+            updateValues.put("zero", "0");
+            String updateValue = updateValues.containsKey(action) ? updateValues.get(action) : "0";
             attributeUpdates.put("commentsCount", AttributeValueUpdate.builder()
-                    .value(AttributeValue.builder().n(action.equals("add") ? "1" : "-1").build())
+                    .value(AttributeValue.builder().n(updateValue).build())
                     .action(AttributeAction.ADD)
                     .build());
 
