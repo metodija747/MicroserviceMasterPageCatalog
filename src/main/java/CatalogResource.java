@@ -1,4 +1,5 @@
 import javax.annotation.PostConstruct;
+import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -17,27 +18,24 @@ import java.util.*;
 import java.util.logging.Logger;
 
 @Path("/products")
+@RequestScoped
 public class CatalogResource {
 
     @Inject
     private ConfigProperties configProperties;
 
-    @Inject
-    @DiscoverService(value = "comment-service", environment = "dev", version = "1.0.0")
-    private Optional<URL> productCommentsUrl;
-
-    @Inject
-    @DiscoverService(value = "cart-service", environment = "dev", version = "1.0.0")
-    private Optional<URL> cartServiceUrl;
-
     private DynamoDbClient dynamoDB;
     private static final Logger LOGGER = Logger.getLogger(CatalogResource.class.getName());
-    private String region = configProperties.getDynamoDbRegion();
-    private String tableName = configProperties.getTableName();
-    private String issuer = configProperties.getIssuer();
+    private String region;
+    private String tableName;
+    private String issuer;
 
     @PostConstruct
     public void init() {
+        region = configProperties.getDynamoDbRegion();
+        tableName = configProperties.getTableName();
+        issuer = configProperties.getIssuer();
+
         LOGGER.info("Region: " + region);
         LOGGER.info("Table Name: " + tableName);
         LOGGER.info("Issuer: " + issuer);
