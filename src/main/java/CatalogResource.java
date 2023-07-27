@@ -23,16 +23,17 @@ import java.util.logging.Logger;
 public class CatalogResource {
 
     @Inject
-    @ConfigProperty(name = "/environments/dev/services/catalog-service/1.0.0/aws-config/dynamoDbRegion")
+    @ConfigProperty(name = "aws-config.dynamoDbRegion")
     private String region;
 
     @Inject
-    @ConfigProperty(name = "/environments/dev/services/catalog-service/1.0.0/aws-config/tableName")
+    @ConfigProperty(name = "aws-config.tableName")
     private String tableName;
 
     @Inject
-    @ConfigProperty(name = "/environments/dev/services/catalog-service/1.0.0/aws-config/issuer")
+    @ConfigProperty(name = "aws-config.issuer")
     private String issuer;
+
 
     private DynamoDbClient dynamoDB;
     private static final Logger LOGGER = Logger.getLogger(CatalogResource.class.getName());
@@ -142,12 +143,12 @@ public class CatalogResource {
     @GET
     @Path("/{productId}")
     public Response getProduct(@PathParam("productId") String productId) {
-        LOGGER.info(issuer + tableName + region);
-        LOGGER.info("Issuer: " + issuer);
-        LOGGER.info("Table Name: " + tableName);
-        LOGGER.info("Region: " + region);
-        Map<String, AttributeValue> key = new HashMap<>();
-        key.put("productId", AttributeValue.builder().s(productId).build());
+//        LOGGER.info(issuer + tableName + region);
+//        LOGGER.info("Issuer: " + issuer);
+//        LOGGER.info("Table Name: " + tableName);
+//        LOGGER.info("Region: " + region);
+//        Map<String, AttributeValue> key = new HashMap<>();
+//        key.put("productId", AttributeValue.builder().s(productId).build());
 
 //        GetItemRequest request = GetItemRequest.builder()
 //                .key(key)
