@@ -18,6 +18,9 @@ kumuluzee:
   discovery:
     etcd:
       hosts: http://etcd-client:2379
+  config:
+    etcd:
+      hosts: http://etcd-client:2379
 aws-config:
   dynamoDbRegion: us-east-1
   tableName: ProductCatalog
