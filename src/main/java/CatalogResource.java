@@ -23,15 +23,15 @@ import java.util.logging.Logger;
 public class CatalogResource {
 
     @Inject
-    @ConfigProperty(name = "aws-config.dynamoDbRegion")
+    @ConfigProperty(name = "/environments/dev/services/catalog-service/1.0.0/aws-config/dynamoDbRegion")
     private String region;
 
     @Inject
-    @ConfigProperty(name = "aws-config.tableName")
+    @ConfigProperty(name = "/environments/dev/services/catalog-service/1.0.0/aws-config/tableName")
     private String tableName;
 
     @Inject
-    @ConfigProperty(name = "aws-config.issuer")
+    @ConfigProperty(name = "/environments/dev/services/catalog-service/1.0.0/aws-config/issuer")
     private String issuer;
 
     private DynamoDbClient dynamoDB;
