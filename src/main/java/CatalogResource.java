@@ -143,7 +143,7 @@ public class CatalogResource {
     @GET
     @Path("/{productId}")
     public Response getProduct(@PathParam("productId") String productId) {
-//        LOGGER.info(issuer + tableName + region);
+        LOGGER.info(issuer + tableName + region);
 //        LOGGER.info("Issuer: " + issuer);
 //        LOGGER.info("Table Name: " + tableName);
 //        LOGGER.info("Region: " + region);
