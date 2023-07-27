@@ -1,18 +1,13 @@
-import javax.annotation.PostConstruct;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import com.auth0.jwk.JwkException;
-import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.kumuluz.ee.discovery.annotations.DiscoverService;
-import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 import java.util.logging.Logger;
@@ -23,8 +18,8 @@ import java.util.logging.Logger;
 @Produces(MediaType.APPLICATION_JSON)
 public class CatalogResource {
 
-//    @Inject
-//    private ConfigProperties configProperties;
+    @Inject
+    private ConfigProperties configProperties;
 
     @Inject
     @DiscoverService(value = "comment-service", environment = "dev", version = "1.0.0")
@@ -36,6 +31,7 @@ public class CatalogResource {
 
     private DynamoDbClient dynamoDB;
     private static final Logger LOGGER = Logger.getLogger(CatalogResource.class.getName());
+
 //    private String region = configProperties.getDynamoDbRegion();
 //    private String tableName = configProperties.getTableName();
 //    private String issuer = configProperties.getIssuer();
