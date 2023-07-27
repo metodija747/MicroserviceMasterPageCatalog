@@ -18,40 +18,32 @@ import java.net.URL;
 import java.util.*;
 import java.util.logging.Logger;
 
-@Path("/products")
 @RequestScoped
+@Path("/products")
+@Consumes(MediaType.APPLICATION_JSON)
+@Produces(MediaType.APPLICATION_JSON)
 public class CatalogResource {
 
     @Inject
-    @ConfigProperty(name = "aws-config.dynamoDbRegion")
-    private String dynamoDbRegion;
-
-    @Inject
-    @ConfigProperty(name = "aws-config.tableName")
-    private String tableName;
-
-    @Inject
-    @ConfigProperty(name = "aws-config.issuer")
-    private String issuer;
-
+    private ConfigProperties configProperties;
 
     private DynamoDbClient dynamoDB;
     private static final Logger LOGGER = Logger.getLogger(CatalogResource.class.getName());
-
-
+    private String region = configProperties.getDynamoDbRegion();
+    private String tableName = configProperties.getTableName();
+    private String issuer = configProperties.getIssuer();
+//        this.dynamoDB = DynamoDbClient.builder()
+//                .region(Region.of(region))
+//                .build();
 //    @PostConstruct
 //    public void init() {
-//        region = configProperties.getDynamoDbRegion();
-//        tableName = configProperties.getTableName();
-//        issuer = configProperties.getIssuer();
+
 //
 //        LOGGER.info("Region: " + region);
 //        LOGGER.info("Table Name: " + tableName);
 //        LOGGER.info("Issuer: " + issuer);
 //
-//        this.dynamoDB = DynamoDbClient.builder()
-//                .region(Region.of(region))
-//                .build();
+
 //    }
 
 
@@ -143,7 +135,7 @@ public class CatalogResource {
     @GET
     @Path("/{productId}")
     public Response getProduct(@PathParam("productId") String productId) {
-        LOGGER.info(issuer + tableName + dynamoDbRegion);
+        LOGGER.info(issuer + tableName + region);
 //        LOGGER.info("Issuer: " + issuer);
 //        LOGGER.info("Table Name: " + tableName);
 //        LOGGER.info("Region: " + region);
