@@ -24,8 +24,8 @@ import java.util.logging.Logger;
 @Produces(MediaType.APPLICATION_JSON)
 public class CatalogResource {
 
-//    @Inject
-//    private ConfigProperties configProperties;
+    @Inject
+    private ConfigProperties configProperties;
 
     private DynamoDbClient dynamoDB;
     private static final Logger LOGGER = Logger.getLogger(CatalogResource.class.getName());
