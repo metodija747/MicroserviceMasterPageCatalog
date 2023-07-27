@@ -17,14 +17,14 @@ import java.net.URL;
 import java.util.*;
 import java.util.logging.Logger;
 
-@Path("/products")
+@RequestScoped
+@Path("/")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-@RequestScoped
 public class CatalogResource {
 
-    @Inject
-    private ConfigProperties configProperties;
+//    @Inject
+//    private ConfigProperties configProperties;
 
     @Inject
     @DiscoverService(value = "comment-service", environment = "dev", version = "1.0.0")
