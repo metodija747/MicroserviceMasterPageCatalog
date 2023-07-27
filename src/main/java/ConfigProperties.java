@@ -8,13 +8,13 @@ import javax.inject.Inject;
 @ConfigBundle("aws-config")
 public class ConfigProperties {
 
-    @ConfigValue(watch = true)
+    @ConfigValue(value = "dynamo-region", watch = true)
     private String dynamoRegion;
 
-    @ConfigValue(watch = true)
+    @ConfigValue(value = "table-name", watch = true)
     private String tableName;
 
-    @ConfigValue(watch = true)
+    @ConfigValue(value = "cognito-issuer", watch = true)
     private String cognitoIssuer;
 
     // getter and setter methods
