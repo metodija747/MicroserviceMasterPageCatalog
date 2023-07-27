@@ -1,3 +1,4 @@
+import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -19,6 +20,9 @@ import java.util.logging.Logger;
 public class CatalogResource {
 
     @Inject
+    private ConfigProperties configProperties;
+
+    @Inject
     @DiscoverService(value = "comment-service", environment = "dev", version = "1.0.0")
     private Optional<URL> productCommentsUrl;
 
@@ -26,11 +30,18 @@ public class CatalogResource {
     @DiscoverService(value = "cart-service", environment = "dev", version = "1.0.0")
     private Optional<URL> cartServiceUrl;
 
-    private DynamoDbClient dynamoDB = DynamoDbClient.builder()
-            .region(Region.US_EAST_1)
-            .build();
-    private String tableName = "ProductCatalog";
+    private DynamoDbClient dynamoDB;
+    @PostConstruct
+    public void init() {
+        this.dynamoDB = DynamoDbClient.builder()
+                .region(Region.of(configProperties.getDynamoDbRegion()))
+                .build();
+    }
+    private String tableName = configProperties.getTableName();
+    private String issuer = configProperties.getIssuer();
+
     private static final Logger LOGGER = Logger.getLogger(CatalogResource.class.getName());
+
 
     @GET
     public Response getProducts(@QueryParam("searchTerm") String searchTerm,
@@ -39,7 +50,6 @@ public class CatalogResource {
                                 @QueryParam("category") String category,
                                 @QueryParam("page") Integer page,
                                 @QueryParam("pageSize") Integer pageSize) {
-        String tableName = "ProductCatalog";
 //        LOGGER.info("DynamoDB response: " + productCommentsUrl);
         try {
             // Default values for page and pageSize if they are not provided
@@ -149,8 +159,8 @@ public class CatalogResource {
 //         Verify the token and get the user's groups
         List<String> groups = null;
         try {
-            TokenVerifier.verifyToken(token, "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_cl8iVMzUw");
-            groups = TokenVerifier.getGroups(token, "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_cl8iVMzUw");
+            TokenVerifier.verifyToken(token, issuer);
+            groups = TokenVerifier.getGroups(token, issuer);
         } catch (JWTVerificationException | JwkException | MalformedURLException e) {
             return Response.status(Response.Status.FORBIDDEN).entity("Invalid token.").build();
         }
@@ -201,8 +211,8 @@ public class CatalogResource {
         // Verify the token and get the  user's groups
         List<String> groups = null;
         try {
-            TokenVerifier.verifyToken(token, "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_cl8iVMzUw");
-            groups = TokenVerifier.getGroups(token, "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_cl8iVMzUw");
+            TokenVerifier.verifyToken(token, issuer);
+            groups = TokenVerifier.getGroups(token, issuer);
         } catch (JWTVerificationException | JwkException | MalformedURLException e) {
             return Response.status(Response.Status.FORBIDDEN).entity("Invalid token.").build();
         }
@@ -254,7 +264,7 @@ public class CatalogResource {
         try {
             List<String> groups;
             try {
-                groups = TokenVerifier.getGroups(token, "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_cl8iVMzUw");
+                groups = TokenVerifier.getGroups(token, issuer);
             } catch (JwkException | MalformedURLException e) {
                 return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid token.").build();
             }

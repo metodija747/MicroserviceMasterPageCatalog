@@ -18,4 +18,9 @@ kumuluzee:
   discovery:
     etcd:
       hosts: http://etcd-client:2379
+  aws-config:
+    dynamoDbRegion: us-east-1
+    tableName: ProductCatalog
+    issuer: https://cognito-idp.us-east-1.amazonaws.com/us-east-1_cl8iVMzUw
+
 
