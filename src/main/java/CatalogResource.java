@@ -8,6 +8,7 @@ import javax.ws.rs.core.Response;
 import com.auth0.jwk.JwkException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.kumuluz.ee.discovery.annotations.DiscoverService;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
@@ -22,13 +23,20 @@ import java.util.logging.Logger;
 public class CatalogResource {
 
     @Inject
-    private ConfigProperties configProperties;
+    @ConfigProperty(name = "aws-config.dynamoDbRegion")
+    private String region;
+
+    @Inject
+    @ConfigProperty(name = "aws-config.tableName")
+    private String tableName;
+
+    @Inject
+    @ConfigProperty(name = "aws-config.issuer")
+    private String issuer;
 
     private DynamoDbClient dynamoDB;
     private static final Logger LOGGER = Logger.getLogger(CatalogResource.class.getName());
-    private String region;
-    private String tableName;
-    private String issuer;
+
 
 //    @PostConstruct
 //    public void init() {
@@ -135,10 +143,6 @@ public class CatalogResource {
     @Path("/{productId}")
     public Response getProduct(@PathParam("productId") String productId) {
         LOGGER.info(issuer + tableName + region);
-        region = configProperties.getDynamoDbRegion();
-        tableName = configProperties.getTableName();
-        issuer = configProperties.getIssuer();
-
         LOGGER.info("Issuer: " + issuer);
         LOGGER.info("Table Name: " + tableName);
         LOGGER.info("Region: " + region);
