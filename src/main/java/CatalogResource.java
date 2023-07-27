@@ -24,8 +24,8 @@ import java.util.logging.Logger;
 @Produces(MediaType.APPLICATION_JSON)
 public class CatalogResource {
 
-    @Inject
-    private ConfigProperties configProperties;
+//    @Inject
+//    private ConfigProperties configProperties;
 
     private DynamoDbClient dynamoDB;
     private static final Logger LOGGER = Logger.getLogger(CatalogResource.class.getName());
@@ -132,7 +132,7 @@ public class CatalogResource {
     @GET
     @Path("/{productId}")
     public Response getProduct(@PathParam("productId") String productId) {
-        LOGGER.info(configProperties.getIssuer() + configProperties.getTableName() + configProperties.getDynamoDbRegion());
+//        LOGGER.info(configProperties.getIssuer() + configProperties.getTableName() + configProperties.getDynamoDbRegion());
 //        LOGGER.info("Issuer: " + issuer);
 //        LOGGER.info("Table Name: " + tableName);
 //        LOGGER.info("Region: " + region);

@@ -4,8 +4,8 @@ import com.kumuluz.ee.configuration.cdi.ConfigValue;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
-@ConfigBundle("aws-config")
 @ApplicationScoped
+@ConfigBundle("aws-config")
 public class ConfigProperties {
 
     @ConfigValue(watch = true)
