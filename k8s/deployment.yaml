@@ -12,6 +12,15 @@ spec:
       labels:
         app: catalog-microservice
     spec:
+      initContainers:
+        - name: etcd-initializer
+          image: quay.io/coreos/etcd:v3.3.15
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              ETCDCTL_API=3 etcdctl put /environments/dev/services/catalog-service/1.0.0/aws-config/dynamoDbRegion us-east-1 && \
+              ETCDCTL_API=3 etcdctl put /environments/dev/services/catalog-service/1.0.0/aws-config/tableName ProductCatalog && \
+              ETCDCTL_API=3 etcdctl put /environments/dev/services/catalog-service/1.0.0/aws-config/issuer https://cognito-idp.us-east-1.amazonaws.com/us-east-1_cl8iVMzUw
       containers:
         - name: catalog-microservice
           image: 2741/catalog-microservice:latest
@@ -28,18 +37,3 @@ spec:
                 secretKeyRef:
                   name: aws-credentials
                   key: AWS_SECRET_ACCESS_KEY
-            - name: DYNAMODB_REGION
-              valueFrom:
-                configMapKeyRef:
-                  name: aws-config
-                  key: dynamoDbRegion
-            - name: TABLE_NAME
-              valueFrom:
-                configMapKeyRef:
-                  name: aws-config
-                  key: tableName
-            - name: ISSUER
-              valueFrom:
-                configMapKeyRef:
-                  name: aws-config
-                  key: issuer
