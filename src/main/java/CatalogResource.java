@@ -36,9 +36,9 @@ public class CatalogResource {
 
     private DynamoDbClient dynamoDB;
     private static final Logger LOGGER = Logger.getLogger(CatalogResource.class.getName());
-    private String region = configProperties.getDynamoDbRegion();
-    private String tableName = configProperties.getTableName();
-    private String issuer = configProperties.getIssuer();
+//    private String region = configProperties.getDynamoDbRegion();
+//    private String tableName = configProperties.getTableName();
+//    private String issuer = configProperties.getIssuer();
 //    @PostConstruct
 //    public void init() {
 //        this.dynamoDB = DynamoDbClient.builder()
@@ -134,7 +134,7 @@ public class CatalogResource {
     @GET
     @Path("/{productId}")
     public Response getProduct(@PathParam("productId") String productId) {
-        LOGGER.info(issuer + tableName + region);
+//        LOGGER.info(issuer + tableName + region);
 //        Map<String, AttributeValue> key = new HashMap<>();
 //        key.put("productId", AttributeValue.builder().s(productId).build());
 //
