@@ -36,11 +36,16 @@ public class CatalogResource {
 
     private DynamoDbClient dynamoDB;
     private static final Logger LOGGER = Logger.getLogger(CatalogResource.class.getName());
-    private String region = configProperties.getDynamoDbRegion();
-    private String tableName = configProperties.getTableName();
-    private String issuer = configProperties.getIssuer();
+    private String region;
+    private String tableName;
+    private String issuer;
+
     @PostConstruct
     public void init() {
+        this.region = configProperties.getDynamoDbRegion();
+        this.tableName = configProperties.getTableName();
+        this.issuer = configProperties.getIssuer();
+
         this.dynamoDB = DynamoDbClient.builder()
                 .region(Region.of(region))
                 .build();
