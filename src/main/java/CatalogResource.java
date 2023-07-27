@@ -36,20 +36,6 @@ public class CatalogResource {
 
     private DynamoDbClient dynamoDB;
     private static final Logger LOGGER = Logger.getLogger(CatalogResource.class.getName());
-    private String region;
-    private String tableName;
-    private String issuer;
-
-    @PostConstruct
-    public void init() {
-        this.region = configProperties.getDynamoRegion();
-        this.tableName = configProperties.getTableName();
-        this.issuer = configProperties.getCognitoIssuer();
-
-        this.dynamoDB = DynamoDbClient.builder()
-                .region(Region.of(region))
-                .build();
-    }
 
     @GET
     public Response getProducts(@QueryParam("searchTerm") String searchTerm,
@@ -58,6 +44,9 @@ public class CatalogResource {
                                 @QueryParam("category") String category,
                                 @QueryParam("page") Integer page,
                                 @QueryParam("pageSize") Integer pageSize) {
+        this.dynamoDB = DynamoDbClient.builder()
+                .region(Region.of(configProperties.getDynamoRegion()))
+                .build();
 //        LOGGER.info("DynamoDB response: " + productCommentsUrl);
         try {
             // Default values for page and pageSize if they are not provided
@@ -68,7 +57,7 @@ public class CatalogResource {
                 pageSize = 4;
             }
 
-            ScanRequest.Builder scanRequestBuilder = ScanRequest.builder().tableName(tableName);
+            ScanRequest.Builder scanRequestBuilder = ScanRequest.builder().tableName(configProperties.getTableName());
 
             String filterExpression = "";
             Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
@@ -138,13 +127,16 @@ public class CatalogResource {
     @GET
     @Path("/{productId}")
     public Response getProduct(@PathParam("productId") String productId) {
-        LOGGER.info(issuer + tableName + configProperties.getDynamoRegion());
+        this.dynamoDB = DynamoDbClient.builder()
+                .region(Region.of(configProperties.getDynamoRegion()))
+                .build();
+        LOGGER.info(configProperties.getCognitoIssuer() + configProperties.getTableName() + configProperties.getDynamoRegion());
         Map<String, AttributeValue> key = new HashMap<>();
         key.put("productId", AttributeValue.builder().s(productId).build());
 
         GetItemRequest request = GetItemRequest.builder()
                 .key(key)
-                .tableName(tableName)
+                .tableName(configProperties.getTableName())
                 .build();
 
         try {
@@ -162,14 +154,17 @@ public class CatalogResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     public Response addProduct(@HeaderParam("Auth") String token, Product product) {
+        this.dynamoDB = DynamoDbClient.builder()
+                .region(Region.of(configProperties.getDynamoRegion()))
+                .build();
         // Parse the token from the Authorization header
         LOGGER.info("DynamoDB response: " + token);
 
 //         Verify the token and get the user's groups
         List<String> groups = null;
         try {
-            TokenVerifier.verifyToken(token, issuer);
-            groups = TokenVerifier.getGroups(token, issuer);
+            TokenVerifier.verifyToken(token, configProperties.getCognitoIssuer());
+            groups = TokenVerifier.getGroups(token, configProperties.getCognitoIssuer());
         } catch (JWTVerificationException | JwkException | MalformedURLException e) {
             return Response.status(Response.Status.FORBIDDEN).entity("Invalid token.").build();
         }
@@ -191,7 +186,7 @@ public class CatalogResource {
             item.put("discountPrice", AttributeValue.builder().n(Double.toString(product.getDiscountPrice())).build());
 
             PutItemRequest putItemRequest = PutItemRequest.builder()
-                    .tableName(tableName)
+                    .tableName(configProperties.getTableName())
                     .item(item)
                     .build();
 
@@ -211,6 +206,9 @@ public class CatalogResource {
                                         @HeaderParam("Auth") String token,
                                         double avgRating,
                                         @QueryParam("action") String action) {
+        this.dynamoDB = DynamoDbClient.builder()
+                .region(Region.of(configProperties.getDynamoRegion()))
+                .build();
         // Parse the token from the Authorization header
         LOGGER.info("DynamoDB response: " + token);
         LOGGER.info("DynamoDB response: " + avgRating);
@@ -220,8 +218,8 @@ public class CatalogResource {
         // Verify the token and get the  user's groups
         List<String> groups = null;
         try {
-            TokenVerifier.verifyToken(token, issuer);
-            groups = TokenVerifier.getGroups(token, issuer);
+            TokenVerifier.verifyToken(token, configProperties.getCognitoIssuer());
+            groups = TokenVerifier.getGroups(token, configProperties.getCognitoIssuer());
         } catch (JWTVerificationException | JwkException | MalformedURLException e) {
             return Response.status(Response.Status.FORBIDDEN).entity("Invalid token.").build();
         }
@@ -252,7 +250,7 @@ public class CatalogResource {
                     .build());
 
             UpdateItemRequest updateItemRequest = UpdateItemRequest.builder()
-                    .tableName(tableName)
+                    .tableName(configProperties.getTableName())
                     .key(key)
                     .attributeUpdates(attributeUpdates)
                     .build();
@@ -273,7 +271,7 @@ public class CatalogResource {
         try {
             List<String> groups;
             try {
-                groups = TokenVerifier.getGroups(token, issuer);
+                groups = TokenVerifier.getGroups(token, configProperties.getCognitoIssuer());
             } catch (JwkException | MalformedURLException e) {
                 return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid token.").build();
             }
@@ -285,7 +283,7 @@ public class CatalogResource {
             key.put("productId", AttributeValue.builder().s(productId).build());
 
             DeleteItemRequest deleteItemRequest = DeleteItemRequest.builder()
-                    .tableName(tableName)
+                    .tableName(configProperties.getTableName())
                     .key(key)
                     .build();
 
