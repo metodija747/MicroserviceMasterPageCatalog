@@ -5,7 +5,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 @ApplicationScoped
-@ConfigBundle("config/aws-config")
+@ConfigBundle("config-aws-config")
 public class ConfigProperties {
 
     @ConfigValue(watch = true)
