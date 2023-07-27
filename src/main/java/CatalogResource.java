@@ -30,20 +30,20 @@ public class CatalogResource {
     private String tableName;
     private String issuer;
 
-    @PostConstruct
-    public void init() {
-        region = configProperties.getDynamoDbRegion();
-        tableName = configProperties.getTableName();
-        issuer = configProperties.getIssuer();
-
-        LOGGER.info("Region: " + region);
-        LOGGER.info("Table Name: " + tableName);
-        LOGGER.info("Issuer: " + issuer);
-
-        this.dynamoDB = DynamoDbClient.builder()
-                .region(Region.of(region))
-                .build();
-    }
+//    @PostConstruct
+//    public void init() {
+//        region = configProperties.getDynamoDbRegion();
+//        tableName = configProperties.getTableName();
+//        issuer = configProperties.getIssuer();
+//
+//        LOGGER.info("Region: " + region);
+//        LOGGER.info("Table Name: " + tableName);
+//        LOGGER.info("Issuer: " + issuer);
+//
+//        this.dynamoDB = DynamoDbClient.builder()
+//                .region(Region.of(region))
+//                .build();
+//    }
 
 
 
@@ -135,6 +135,13 @@ public class CatalogResource {
     @Path("/{productId}")
     public Response getProduct(@PathParam("productId") String productId) {
         LOGGER.info(issuer + tableName + region);
+        region = configProperties.getDynamoDbRegion();
+        tableName = configProperties.getTableName();
+        issuer = configProperties.getIssuer();
+
+        LOGGER.info("Issuer: " + issuer);
+        LOGGER.info("Table Name: " + tableName);
+        LOGGER.info("Region: " + region);
         Map<String, AttributeValue> key = new HashMap<>();
         key.put("productId", AttributeValue.builder().s(productId).build());
 
