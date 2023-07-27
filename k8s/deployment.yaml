@@ -28,3 +28,18 @@ spec:
                 secretKeyRef:
                   name: aws-credentials
                   key: AWS_SECRET_ACCESS_KEY
+            - name: DYNAMODB_REGION
+              valueFrom:
+                configMapKeyRef:
+                  name: aws-config
+                  key: dynamoDbRegion
+            - name: TABLE_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: aws-config
+                  key: tableName
+            - name: ISSUER
+              valueFrom:
+                configMapKeyRef:
+                  name: aws-config
+                  key: issuer

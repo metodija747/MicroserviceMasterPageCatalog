@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aws-config
+data:
+  dynamoDbRegion: "us-east-1"
+  tableName: "ProductCatalog"
+  issuer: "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_cl8iVMzUw"
