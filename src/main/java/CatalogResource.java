@@ -29,9 +29,6 @@ public class CatalogResource {
 
     private DynamoDbClient dynamoDB;
     private static final Logger LOGGER = Logger.getLogger(CatalogResource.class.getName());
-    private String region = configProperties.getDynamoDbRegion();
-    private String tableName = configProperties.getTableName();
-    private String issuer = configProperties.getIssuer();
 //        this.dynamoDB = DynamoDbClient.builder()
 //                .region(Region.of(region))
 //                .build();
@@ -135,7 +132,7 @@ public class CatalogResource {
     @GET
     @Path("/{productId}")
     public Response getProduct(@PathParam("productId") String productId) {
-        LOGGER.info(issuer + tableName + region);
+        LOGGER.info(configProperties.getIssuer() + configProperties.getTableName() + configProperties.getDynamoDbRegion());
 //        LOGGER.info("Issuer: " + issuer);
 //        LOGGER.info("Table Name: " + tableName);
 //        LOGGER.info("Region: " + region);
