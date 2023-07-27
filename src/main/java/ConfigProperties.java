@@ -9,22 +9,22 @@ import javax.inject.Inject;
 public class ConfigProperties {
 
     @ConfigValue(watch = true)
-    private String dynamoDbRegion;
+    private String dynamoRegion;
 
     @ConfigValue(watch = true)
     private String tableName;
 
     @ConfigValue(watch = true)
-    private String issuer;
+    private String cognitoIssuer;
 
     // getter and setter methods
 
-    public String getDynamoDbRegion() {
-        return dynamoDbRegion;
+    public String getDynamoRegion() {
+        return dynamoRegion;
     }
 
-    public void setDynamoDbRegion(String dynamoDbRegion) {
-        this.dynamoDbRegion = dynamoDbRegion;
+    public void setDynamoRegion(String dynamoRegion) {
+        this.dynamoRegion = dynamoRegion;
     }
 
     public String getTableName() {
@@ -35,11 +35,11 @@ public class ConfigProperties {
         this.tableName = tableName;
     }
 
-    public String getIssuer() {
-        return issuer;
+    public String getCognitoIssuer() {
+        return cognitoIssuer;
     }
 
-    public void setIssuer(String issuer) {
-        this.issuer = issuer;
+    public void setCognitoIssuer(String cognitoIssuer) {
+        this.cognitoIssuer = cognitoIssuer;
     }
 }

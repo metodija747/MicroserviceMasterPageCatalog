@@ -42,9 +42,9 @@ public class CatalogResource {
 
     @PostConstruct
     public void init() {
-        this.region = configProperties.getDynamoDbRegion();
+        this.region = configProperties.getDynamoRegion();
         this.tableName = configProperties.getTableName();
-        this.issuer = configProperties.getIssuer();
+        this.issuer = configProperties.getCognitoIssuer();
 
         this.dynamoDB = DynamoDbClient.builder()
                 .region(Region.of(region))
