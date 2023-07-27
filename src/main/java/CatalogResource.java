@@ -31,16 +31,18 @@ public class CatalogResource {
     private Optional<URL> cartServiceUrl;
 
     private DynamoDbClient dynamoDB;
+    private static final Logger LOGGER = Logger.getLogger(CatalogResource.class.getName());
+    private String region = configProperties.getDynamoDbRegion();
+    private String tableName = configProperties.getTableName();
+    private String issuer = configProperties.getIssuer();
     @PostConstruct
     public void init() {
         this.dynamoDB = DynamoDbClient.builder()
-                .region(Region.of(configProperties.getDynamoDbRegion()))
+                .region(Region.of(region))
                 .build();
     }
-    private String tableName = configProperties.getTableName();
-    private String issuer = configProperties.getIssuer();
 
-    private static final Logger LOGGER = Logger.getLogger(CatalogResource.class.getName());
+
 
 
     @GET
@@ -130,6 +132,7 @@ public class CatalogResource {
     @GET
     @Path("/{productId}")
     public Response getProduct(@PathParam("productId") String productId) {
+        LOGGER.info(issuer + tableName + region);
         Map<String, AttributeValue> key = new HashMap<>();
         key.put("productId", AttributeValue.builder().s(productId).build());
 
