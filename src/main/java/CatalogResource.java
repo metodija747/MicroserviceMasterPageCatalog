@@ -35,13 +35,17 @@ public class CatalogResource {
     private String region = configProperties.getDynamoDbRegion();
     private String tableName = configProperties.getTableName();
     private String issuer = configProperties.getIssuer();
+
     @PostConstruct
     public void init() {
+        LOGGER.info("Region: " + region);
+        LOGGER.info("Table Name: " + tableName);
+        LOGGER.info("Issuer: " + issuer);
+
         this.dynamoDB = DynamoDbClient.builder()
                 .region(Region.of(region))
                 .build();
     }
-
 
 
 

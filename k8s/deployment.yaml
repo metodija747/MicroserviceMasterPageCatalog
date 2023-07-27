@@ -21,6 +21,11 @@ spec:
               ETCDCTL_API=3 etcdctl put /environments/dev/services/catalog-service/1.0.0/aws-config/dynamoDbRegion us-east-1 && \
               ETCDCTL_API=3 etcdctl put /environments/dev/services/catalog-service/1.0.0/aws-config/tableName ProductCatalog && \
               ETCDCTL_API=3 etcdctl put /environments/dev/services/catalog-service/1.0.0/aws-config/issuer https://cognito-idp.us-east-1.amazonaws.com/us-east-1_cl8iVMzUw
+          env:
+            - name: ETCDCTL_API
+              value: "3"
+            - name: ETCDCTL_ENDPOINTS
+              value: http://etcd-client:2379
       containers:
         - name: catalog-microservice
           image: 2741/catalog-microservice:latest
