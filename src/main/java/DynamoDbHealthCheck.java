@@ -17,16 +17,12 @@ public class DynamoDbHealthCheck implements HealthCheck {
     @Inject
     private ConfigProperties configProperties;
 
-    @PostConstruct
-    public void init() {
+    @Override
+    public HealthCheckResponse call() {
         this.dynamoDB = DynamoDbClient.builder()
                 .region(Region.of(configProperties.getDynamoRegion()))
                 .build();
         this.REQUIRED_TABLE = configProperties.getTableName();
-    }
-
-    @Override
-    public HealthCheckResponse call() {
         HealthCheckResponseBuilder responseBuilder = HealthCheckResponse.named("DynamoDB health check");
         try {
             DescribeTableResponse describeTableResponse = dynamoDB.describeTable(DescribeTableRequest.builder().tableName(REQUIRED_TABLE).build());
