@@ -5,7 +5,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 
-@RequestScoped
+@ApplicationScoped
 @ConfigBundle("aws-config")
 public class ConfigProperties {
 
