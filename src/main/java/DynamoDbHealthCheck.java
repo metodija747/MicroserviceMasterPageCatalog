@@ -5,13 +5,11 @@ import software.amazon.awssdk.services.dynamodb.model.*;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 
 @ApplicationScoped
 @Liveness
 @Readiness
-@RequestScoped
 public class DynamoDbHealthCheck implements HealthCheck {
 
     private DynamoDbClient dynamoDB;
@@ -24,10 +22,8 @@ public class DynamoDbHealthCheck implements HealthCheck {
         this.dynamoDB = DynamoDbClient.builder()
                 .region(Region.of(configProperties.getDynamoRegion()))
                 .build();
-        REQUIRED_TABLE = configProperties.getTableName();
+        this.REQUIRED_TABLE = configProperties.getTableName();
     }
-
-
 
     @Override
     public HealthCheckResponse call() {
@@ -36,13 +32,25 @@ public class DynamoDbHealthCheck implements HealthCheck {
             DescribeTableResponse describeTableResponse = dynamoDB.describeTable(DescribeTableRequest.builder().tableName(REQUIRED_TABLE).build());
             ProvisionedThroughputDescription throughput = describeTableResponse.table().provisionedThroughput();
 
-            if (throughput.readCapacityUnits() < 2 || throughput.writeCapacityUnits() < 2) {
-                return responseBuilder.down().withData("error", "Table " + REQUIRED_TABLE + " has insufficient read/write capacity").build();
+            if (throughput.readCapacityUnits() < 1 || throughput.writeCapacityUnits() < 1) {
+                return responseBuilder.down()
+                        .withData("error", "Table " + REQUIRED_TABLE + " has insufficient read/write capacity")
+                        .withData("tableName", REQUIRED_TABLE)
+                        .withData("readCapacityUnits", throughput.readCapacityUnits())
+                        .withData("writeCapacityUnits", throughput.writeCapacityUnits())
+                        .build();
             }
 
-            return responseBuilder.up().build();
+            return responseBuilder.up()
+                    .withData("tableName", REQUIRED_TABLE)
+                    .withData("readCapacityUnits", throughput.readCapacityUnits())
+                    .withData("writeCapacityUnits", throughput.writeCapacityUnits())
+                    .build();
         } catch (DynamoDbException e) {
-            return responseBuilder.down().withData("error", "Table " + REQUIRED_TABLE + " does not exist or another error occurred").build();
+            return responseBuilder.down()
+                    .withData("error", "Table " + REQUIRED_TABLE + " does not exist or another error occurred")
+                    .withData("tableName", REQUIRED_TABLE)
+                    .build();
         }
     }
 }
