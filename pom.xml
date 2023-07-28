@@ -95,6 +95,11 @@
                 <artifactId>kumuluzee-metrics-core</artifactId>
                 <version>3.0.0</version>
             </dependency>
+            <dependency>
+                <groupId>com.kumuluz.ee.metrics</groupId>
+                <artifactId>kumuluzee-metrics-logstash</artifactId>
+                <version>3.0.0</version>
+            </dependency>
         </dependencies>
 
     <properties>

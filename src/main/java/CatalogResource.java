@@ -1,4 +1,6 @@
 import javax.annotation.PostConstruct;
+import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.ws.rs.*;
@@ -173,35 +175,18 @@ public class CatalogResource {
         }
     }
 
-
-
-
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Counted(name = "addProductCount", description = "Count of addProduct calls")
     @Timed(name = "addProductTime", description = "Time taken to add a product")
     @Metered(name = "addProductMetered", description = "Rate of addProduct calls")
     @ConcurrentGauge(name = "addProductConcurrent", description = "Concurrent addProduct calls")
-    public Response addProduct(@HeaderParam("Auth") String token, Product product) {
+    @RolesAllowed("Admins")
+    public Response addProduct(Product product) {
         this.dynamoDB = DynamoDbClient.builder()
                 .region(Region.of(configProperties.getDynamoRegion()))
                 .build();
-        // Parse the token from the Authorization header
-        LOGGER.info("DynamoDB response: " + token);
 
-//         Verify the token and get the user's groups
-        List<String> groups = null;
-        try {
-            TokenVerifier.verifyToken(token, configProperties.getCognitoIssuer());
-            groups = TokenVerifier.getGroups(token, configProperties.getCognitoIssuer());
-        } catch (JWTVerificationException | JwkException | MalformedURLException e) {
-            return Response.status(Response.Status.FORBIDDEN).entity("Invalid token.").build();
-        }
-
-        // Check if the user is in the "Admins" group
-        if (groups == null || !groups.contains("Admins")) {
-            return Response.status(Response.Status.FORBIDDEN).entity("Unauthorized: only admin users can add new products.").build();
-        }
         try {
             Map<String, AttributeValue> item = new HashMap<>();
             item.put("productId", AttributeValue.builder().s(product.getProductId()).build());
@@ -235,32 +220,17 @@ public class CatalogResource {
     @Timed(name = "updateProductRatingTime", description = "Time taken to update a product rating")
     @Metered(name = "updateProductRatingMetered", description = "Rate of updateProductRating calls")
     @ConcurrentGauge(name = "updateProductRatingConcurrent", description = "Concurrent updateProductRating calls")
+    @PermitAll
     public Response updateProductRating(@PathParam("productId") String productId,
-                                        @HeaderParam("Auth") String token,
                                         double avgRating,
                                         @QueryParam("action") String action) {
         this.dynamoDB = DynamoDbClient.builder()
                 .region(Region.of(configProperties.getDynamoRegion()))
                 .build();
-        // Parse the token from the Authorization header
-        LOGGER.info("DynamoDB response: " + token);
+
         LOGGER.info("DynamoDB response: " + avgRating);
         LOGGER.info("DynamoDB response: " + productId);
         LOGGER.info("DynamoDB response: " + action);
-
-        // Verify the token and get the  user's groups
-        List<String> groups = null;
-        try {
-            TokenVerifier.verifyToken(token, configProperties.getCognitoIssuer());
-            groups = TokenVerifier.getGroups(token, configProperties.getCognitoIssuer());
-        } catch (JWTVerificationException | JwkException | MalformedURLException e) {
-            return Response.status(Response.Status.FORBIDDEN).entity("Invalid token.").build();
-        }
-
-        // Check if the user is in the "Admins" group
-        if (groups == null || !groups.contains("Admins")) {
-            return Response.status(Response.Status.FORBIDDEN).entity("Unauthorized: only admin users can update product ratings.").build();
-        }
 
         try {
             Map<String, AttributeValue> key = new HashMap<>();
@@ -296,26 +266,15 @@ public class CatalogResource {
         }
     }
 
-
-
     @DELETE
     @Path("/{productId}")
     @Counted(name = "deleteProductCount", description = "Count of deleteProduct calls")
     @Timed(name = "deleteProductTime", description = "Time taken to delete a product")
     @Metered(name = "deleteProductMetered", description = "Rate of deleteProduct calls")
     @ConcurrentGauge(name = "deleteProductConcurrent", description = "Concurrent deleteProduct calls")
-    public Response deleteProduct(@PathParam("productId") String productId, @HeaderParam("Auth") String token) {
+    @RolesAllowed("Admins")
+    public Response deleteProduct(@PathParam("productId") String productId) {
         try {
-            List<String> groups;
-            try {
-                groups = TokenVerifier.getGroups(token, configProperties.getCognitoIssuer());
-            } catch (JwkException | MalformedURLException e) {
-                return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid token.").build();
-            }
-            if (groups == null || !groups.contains("Admins")) {
-                return Response.status(Response.Status.FORBIDDEN).entity("Unauthorized: only admin users can delete products.").build();
-            }
-
             Map<String, AttributeValue> key = new HashMap<>();
             key.put("productId", AttributeValue.builder().s(productId).build());
 
@@ -331,5 +290,6 @@ public class CatalogResource {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
         }
     }
+
 
 }
