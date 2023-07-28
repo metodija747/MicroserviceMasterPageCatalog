@@ -35,10 +35,10 @@ kumuluzee:
       disk-space-health-check:
         threshold: 100000000
       etcd-health-check:
-        - connection-url: http://localhost:2379/health
-        - connection-url: http://etcd-client:2379/health
+        connection-url: http://etcd-client:2379/health
       http-health-check:
         connection-url: https://github.com/metodija747/MicroserviceMasterProductCatalog.git
+
 aws-config:
   dynamo-region: us-east-1
   table-name: ProductCatalog
