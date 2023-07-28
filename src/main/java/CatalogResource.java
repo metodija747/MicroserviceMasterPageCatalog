@@ -1,6 +1,4 @@
 import javax.annotation.PostConstruct;
-import javax.annotation.security.PermitAll;
-import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.ws.rs.*;
@@ -13,6 +11,9 @@ import com.kumuluz.ee.cors.annotations.CrossOrigin;
 import com.kumuluz.ee.discovery.annotations.DiscoverService;
 import com.kumuluz.ee.logs.cdi.Log;
 import com.kumuluz.ee.logs.cdi.LogParams;
+import org.eclipse.microprofile.jwt.Claim;
+import org.eclipse.microprofile.jwt.ClaimValue;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.eclipse.microprofile.metrics.Histogram;
 import org.eclipse.microprofile.metrics.annotation.*;
 import software.amazon.awssdk.regions.Region;
@@ -33,6 +34,13 @@ public class CatalogResource {
 
     @Inject
     private ConfigProperties configProperties;
+
+    @Inject
+    @Claim("cognito:groups")
+    private ClaimValue<Set<String>> cognitoGroups;
+
+    @Inject
+    private JsonWebToken jwt;
 
     @Inject
     @DiscoverService(value = "comment-service", environment = "dev", version = "1.0.0")
@@ -85,7 +93,6 @@ public class CatalogResource {
     @Timed(name = "getProductsTime", description = "Time taken to fetch products")
     @Metered(name = "getProductsMetered", description = "Rate of getProducts calls")
     @ConcurrentGauge(name = "getProductsConcurrent", description = "Concurrent getProducts calls")
-    @RolesAllowed("Admins")
     public Response getProducts(@QueryParam("searchTerm") String searchTerm,
                                 @QueryParam("sortBy") String sortBy,
                                 @QueryParam("sortOrder") String sortOrder,
@@ -182,12 +189,17 @@ public class CatalogResource {
     @Timed(name = "addProductTime", description = "Time taken to add a product")
     @Metered(name = "addProductMetered", description = "Rate of addProduct calls")
     @ConcurrentGauge(name = "addProductConcurrent", description = "Concurrent addProduct calls")
-    @RolesAllowed("Admins")
     public Response addProduct(Product product) {
+        Set<String> userGroups = cognitoGroups.getValue();
+        if (jwt == null) {
+            return Response.status(Response.Status.UNAUTHORIZED).entity("Unauthorized: only authenticated users can update product ratings.").build();
+        }
+        if (userGroups == null || !userGroups.contains("Admins")) {
+            return Response.status(Response.Status.FORBIDDEN).entity("Unauthorized: only admin users can add new products.").build();
+        }
         this.dynamoDB = DynamoDbClient.builder()
                 .region(Region.of(configProperties.getDynamoRegion()))
                 .build();
-
         try {
             Map<String, AttributeValue> item = new HashMap<>();
             item.put("productId", AttributeValue.builder().s(product.getProductId()).build());
@@ -221,17 +233,21 @@ public class CatalogResource {
     @Timed(name = "updateProductRatingTime", description = "Time taken to update a product rating")
     @Metered(name = "updateProductRatingMetered", description = "Rate of updateProductRating calls")
     @ConcurrentGauge(name = "updateProductRatingConcurrent", description = "Concurrent updateProductRating calls")
-    @PermitAll
     public Response updateProductRating(@PathParam("productId") String productId,
                                         double avgRating,
                                         @QueryParam("action") String action) {
+        if (jwt == null) {
+            return Response.status(Response.Status.UNAUTHORIZED).entity("Unauthorized: only authenticated users can update product ratings.").build();
+        }
         this.dynamoDB = DynamoDbClient.builder()
                 .region(Region.of(configProperties.getDynamoRegion()))
                 .build();
 
+
         LOGGER.info("DynamoDB response: " + avgRating);
         LOGGER.info("DynamoDB response: " + productId);
         LOGGER.info("DynamoDB response: " + action);
+
 
         try {
             Map<String, AttributeValue> key = new HashMap<>();
@@ -267,15 +283,24 @@ public class CatalogResource {
         }
     }
 
+
+
     @DELETE
     @Path("/{productId}")
     @Counted(name = "deleteProductCount", description = "Count of deleteProduct calls")
     @Timed(name = "deleteProductTime", description = "Time taken to delete a product")
     @Metered(name = "deleteProductMetered", description = "Rate of deleteProduct calls")
     @ConcurrentGauge(name = "deleteProductConcurrent", description = "Concurrent deleteProduct calls")
-    @RolesAllowed("Admins")
     public Response deleteProduct(@PathParam("productId") String productId) {
         try {
+            Set<String> userGroups = cognitoGroups.getValue();
+            if (jwt == null) {
+                return Response.status(Response.Status.UNAUTHORIZED).entity("Unauthorized: only authenticated users can update product ratings.").build();
+            }
+            if (userGroups == null || !userGroups.contains("Admins")) {
+                return Response.status(Response.Status.FORBIDDEN).entity("Unauthorized: only admin users can add new products.").build();
+            }
+
             Map<String, AttributeValue> key = new HashMap<>();
             key.put("productId", AttributeValue.builder().s(productId).build());
 
@@ -291,6 +316,5 @@ public class CatalogResource {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
         }
     }
-
 
 }
