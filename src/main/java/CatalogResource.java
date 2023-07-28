@@ -37,7 +37,7 @@ public class CatalogResource {
 
     @Inject
     @Claim("cognito:groups")
-    private ClaimValue<Set<String>> cognitoGroups;
+    private ClaimValue<List<String>> cognitoGroups;
 
     @Inject
     private JsonWebToken jwt;
@@ -190,10 +190,10 @@ public class CatalogResource {
     @Metered(name = "addProductMetered", description = "Rate of addProduct calls")
     @ConcurrentGauge(name = "addProductConcurrent", description = "Concurrent addProduct calls")
     public Response addProduct(Product product) {
-        Set<String> userGroups = cognitoGroups.getValue();
         if (jwt == null) {
             return Response.status(Response.Status.UNAUTHORIZED).entity("Unauthorized: only authenticated users can update product ratings.").build();
         }
+        List<String> userGroups = cognitoGroups.getValue();
         if (userGroups == null || !userGroups.contains("Admins")) {
             return Response.status(Response.Status.FORBIDDEN).entity("Unauthorized: only admin users can add new products.").build();
         }
@@ -293,10 +293,10 @@ public class CatalogResource {
     @ConcurrentGauge(name = "deleteProductConcurrent", description = "Concurrent deleteProduct calls")
     public Response deleteProduct(@PathParam("productId") String productId) {
         try {
-            Set<String> userGroups = cognitoGroups.getValue();
             if (jwt == null) {
                 return Response.status(Response.Status.UNAUTHORIZED).entity("Unauthorized: only authenticated users can update product ratings.").build();
             }
+            List<String> userGroups = cognitoGroups.getValue();
             if (userGroups == null || !userGroups.contains("Admins")) {
                 return Response.status(Response.Status.FORBIDDEN).entity("Unauthorized: only admin users can add new products.").build();
             }
