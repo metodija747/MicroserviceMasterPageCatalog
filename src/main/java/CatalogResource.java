@@ -11,6 +11,8 @@ import com.kumuluz.ee.cors.annotations.CrossOrigin;
 import com.kumuluz.ee.discovery.annotations.DiscoverService;
 import com.kumuluz.ee.logs.cdi.Log;
 import com.kumuluz.ee.logs.cdi.LogParams;
+import org.eclipse.microprofile.metrics.Histogram;
+import org.eclipse.microprofile.metrics.annotation.*;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
@@ -41,9 +43,18 @@ public class CatalogResource {
     private DynamoDbClient dynamoDB;
     private static final Logger LOGGER = Logger.getLogger(CatalogResource.class.getName());
 
+    @Inject
+    @Metric(name = "getProductsHistogram distribution of execution time")
+    Histogram getProductsHistogram;
+
     @GET
     @Path("/{productId}")
+    @Counted(name = "getProductCount", description = "Count of getProduct calls")
+    @Timed(name = "getProductTime", description = "Time taken to fetch a product")
+    @Metered(name = "getProductMetered", description = "Rate of getProduct calls")
+    @ConcurrentGauge(name = "getProductConcurrent", description = "Concurrent getProduct calls")
     public Response getProduct(@PathParam("productId") String productId) {
+
         this.dynamoDB = DynamoDbClient.builder()
                 .region(Region.of(configProperties.getDynamoRegion()))
                 .build();
@@ -68,12 +79,17 @@ public class CatalogResource {
     }
 
     @GET
+    @Counted(name = "getProductsCount", description = "Count of getProducts calls")
+    @Timed(name = "getProductsTime", description = "Time taken to fetch products")
+    @Metered(name = "getProductsMetered", description = "Rate of getProducts calls")
+    @ConcurrentGauge(name = "getProductsConcurrent", description = "Concurrent getProducts calls")
     public Response getProducts(@QueryParam("searchTerm") String searchTerm,
                                 @QueryParam("sortBy") String sortBy,
                                 @QueryParam("sortOrder") String sortOrder,
                                 @QueryParam("category") String category,
                                 @QueryParam("page") Integer page,
                                 @QueryParam("pageSize") Integer pageSize) {
+        long startTime = System.nanoTime();
         this.dynamoDB = DynamoDbClient.builder()
                 .region(Region.of(configProperties.getDynamoRegion()))
                 .build();
@@ -146,10 +162,13 @@ public class CatalogResource {
             responseBody.put("totalProducts", items.size());
             responseBody.put("currentRangeStart", start + 1);
             responseBody.put("currentRangeEnd", end);
-
+            long endTime = System.nanoTime();
+            getProductsHistogram.update(endTime - startTime);
             return Response.ok(responseBody).build();
 
         } catch (DynamoDbException e) {
+            long endTime = System.nanoTime();
+            getProductsHistogram.update(endTime - startTime);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
         }
     }
@@ -159,6 +178,10 @@ public class CatalogResource {
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
+    @Counted(name = "addProductCount", description = "Count of addProduct calls")
+    @Timed(name = "addProductTime", description = "Time taken to add a product")
+    @Metered(name = "addProductMetered", description = "Rate of addProduct calls")
+    @ConcurrentGauge(name = "addProductConcurrent", description = "Concurrent addProduct calls")
     public Response addProduct(@HeaderParam("Auth") String token, Product product) {
         this.dynamoDB = DynamoDbClient.builder()
                 .region(Region.of(configProperties.getDynamoRegion()))
@@ -208,6 +231,10 @@ public class CatalogResource {
     @PUT
     @Path("/{productId}")
     @Consumes(MediaType.APPLICATION_JSON)
+    @Counted(name = "updateProductRatingCount", description = "Count of updateProductRating calls")
+    @Timed(name = "updateProductRatingTime", description = "Time taken to update a product rating")
+    @Metered(name = "updateProductRatingMetered", description = "Rate of updateProductRating calls")
+    @ConcurrentGauge(name = "updateProductRatingConcurrent", description = "Concurrent updateProductRating calls")
     public Response updateProductRating(@PathParam("productId") String productId,
                                         @HeaderParam("Auth") String token,
                                         double avgRating,
@@ -273,6 +300,10 @@ public class CatalogResource {
 
     @DELETE
     @Path("/{productId}")
+    @Counted(name = "deleteProductCount", description = "Count of deleteProduct calls")
+    @Timed(name = "deleteProductTime", description = "Time taken to delete a product")
+    @Metered(name = "deleteProductMetered", description = "Rate of deleteProduct calls")
+    @ConcurrentGauge(name = "deleteProductConcurrent", description = "Concurrent deleteProduct calls")
     public Response deleteProduct(@PathParam("productId") String productId, @HeaderParam("Auth") String token) {
         try {
             List<String> groups;

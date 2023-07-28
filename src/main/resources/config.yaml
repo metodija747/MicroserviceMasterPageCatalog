@@ -22,7 +22,7 @@ kumuluzee:
                           <Logger name="CatalogResource" level="trace" additivity="false">
                             <AppenderRef ref="console"/>
                           </Logger>
-                          <!-- D efault logger -->
+                          <!-- Default logger -->
                           <Root level="info">
                               <AppenderRef ref="console"/>
                           </Root>
@@ -56,10 +56,11 @@ kumuluzee:
         connection-url: http://etcd-client:2379/health
       http-health-check:
         connection-url: https://github.com/metodija747/MicroserviceMasterProductCatalog.git
-
+  metrics:
+    servlet:
+      enabled: true
+      mapping: /metrics
 aws-config:
   dynamo-region: us-east-1
   table-name: ProductCatalog
   cognito-issuer: https://cognito-idp.us-east-1.amazonaws.com/us-east-1_cl8iVMzUw
-
-
