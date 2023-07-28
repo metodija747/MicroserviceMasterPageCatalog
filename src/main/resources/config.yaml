@@ -1,9 +1,15 @@
 kumuluzee:
   cors-filter:
-    annotations:
-      catalog:
-        allow-origin: "*"
-        allow-subdomains: false
+    servlet:
+      enabled: true
+      allow-generic-http-requests: true
+      allow-origin: "*"
+      allow-subdomains: true
+      supported-methods: "GET, POST, PUT, DELETE, OPTIONS, HEAD"
+      supported-headers: "*"
+      exposed-headers: ""
+      supports-credentials: true
+      max-age: 3600
   name: catalog-service
   version: 1.0.0
   env:
