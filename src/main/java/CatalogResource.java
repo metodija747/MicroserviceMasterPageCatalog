@@ -85,6 +85,7 @@ public class CatalogResource {
     @Timed(name = "getProductsTime", description = "Time taken to fetch products")
     @Metered(name = "getProductsMetered", description = "Rate of getProducts calls")
     @ConcurrentGauge(name = "getProductsConcurrent", description = "Concurrent getProducts calls")
+    @PermitAll
     public Response getProducts(@QueryParam("searchTerm") String searchTerm,
                                 @QueryParam("sortBy") String sortBy,
                                 @QueryParam("sortOrder") String sortOrder,
