@@ -15,6 +15,7 @@ import javax.inject.Inject;
 public class DynamoDbHealthCheck implements HealthCheck {
 
     private DynamoDbClient dynamoDB;
+    private String REQUIRED_TABLE;
     @Inject
     private ConfigProperties configProperties;
 
@@ -23,9 +24,10 @@ public class DynamoDbHealthCheck implements HealthCheck {
         this.dynamoDB = DynamoDbClient.builder()
                 .region(Region.of(configProperties.getDynamoRegion()))
                 .build();
+        REQUIRED_TABLE = configProperties.getTableName();
     }
 
-    private static final String REQUIRED_TABLE = "ProductCatalog";
+
 
     @Override
     public HealthCheckResponse call() {
@@ -34,7 +36,7 @@ public class DynamoDbHealthCheck implements HealthCheck {
             DescribeTableResponse describeTableResponse = dynamoDB.describeTable(DescribeTableRequest.builder().tableName(REQUIRED_TABLE).build());
             ProvisionedThroughputDescription throughput = describeTableResponse.table().provisionedThroughput();
 
-            if (throughput.readCapacityUnits() < 1 || throughput.writeCapacityUnits() < 1) {
+            if (throughput.readCapacityUnits() < 2 || throughput.writeCapacityUnits() < 2) {
                 return responseBuilder.down().withData("error", "Table " + REQUIRED_TABLE + " has insufficient read/write capacity").build();
             }
 
