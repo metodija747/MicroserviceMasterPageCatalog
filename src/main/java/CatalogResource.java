@@ -7,6 +7,7 @@ import javax.ws.rs.core.Response;
 
 import com.auth0.jwk.JwkException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.kumuluz.ee.cors.annotations.CrossOrigin;
 import com.kumuluz.ee.discovery.annotations.DiscoverService;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
@@ -21,6 +22,7 @@ import java.util.logging.Logger;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @RequestScoped
+@CrossOrigin
 public class CatalogResource {
 
     @Inject
@@ -36,6 +38,32 @@ public class CatalogResource {
 
     private DynamoDbClient dynamoDB;
     private static final Logger LOGGER = Logger.getLogger(CatalogResource.class.getName());
+
+    @GET
+    @Path("/{productId}")
+    public Response getProduct(@PathParam("productId") String productId) {
+        this.dynamoDB = DynamoDbClient.builder()
+                .region(Region.of(configProperties.getDynamoRegion()))
+                .build();
+        LOGGER.info(configProperties.getCognitoIssuer() + configProperties.getTableName() + configProperties.getDynamoRegion());
+        Map<String, AttributeValue> key = new HashMap<>();
+        key.put("productId", AttributeValue.builder().s(productId).build());
+
+        GetItemRequest request = GetItemRequest.builder()
+                .key(key)
+                .tableName(configProperties.getTableName())
+                .build();
+
+        try {
+            GetItemResponse getItemResponse = dynamoDB.getItem(request);
+            Map<String, AttributeValue> item = getItemResponse.item();
+            Map<String, String> transformedItem = ResponseTransformer.transformItem(item);
+
+            return Response.ok(transformedItem).build();
+        } catch (DynamoDbException e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+        }
+    }
 
     @GET
     public Response getProducts(@QueryParam("searchTerm") String searchTerm,
@@ -124,31 +152,7 @@ public class CatalogResource {
         }
     }
 
-    @GET
-    @Path("/{productId}")
-    public Response getProduct(@PathParam("productId") String productId) {
-        this.dynamoDB = DynamoDbClient.builder()
-                .region(Region.of(configProperties.getDynamoRegion()))
-                .build();
-        LOGGER.info(configProperties.getCognitoIssuer() + configProperties.getTableName() + configProperties.getDynamoRegion());
-        Map<String, AttributeValue> key = new HashMap<>();
-        key.put("productId", AttributeValue.builder().s(productId).build());
 
-        GetItemRequest request = GetItemRequest.builder()
-                .key(key)
-                .tableName(configProperties.getTableName())
-                .build();
-
-        try {
-            GetItemResponse getItemResponse = dynamoDB.getItem(request);
-            Map<String, AttributeValue> item = getItemResponse.item();
-            Map<String, String> transformedItem = ResponseTransformer.transformItem(item);
-
-            return Response.ok(transformedItem).build();
-        } catch (DynamoDbException e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
-        }
-    }
 
 
     @POST
