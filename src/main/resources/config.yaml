@@ -60,11 +60,6 @@ kumuluzee:
     servlet:
       enabled: true
       mapping: /metrics
-    logstash:
-      enabled: true
-      address: <logstash-server-address>
-      port: <logstash-server-port>
-      period-s: 60
   jwt-auth:
     jwks-uri: https://cognito-idp.us-east-1.amazonaws.com/us-east-1_cl8iVMzUw/.well-known/jwks.json
     issuer: https://cognito-idp.us-east-1.amazonaws.com/us-east-1_cl8iVMzUw
