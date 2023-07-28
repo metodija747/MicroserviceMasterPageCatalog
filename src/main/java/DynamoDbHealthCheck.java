@@ -1,4 +1,3 @@
-import com.kumuluz.ee.health.checks.KumuluzHealthCheck;
 import org.eclipse.microprofile.health.*;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
@@ -6,13 +5,13 @@ import software.amazon.awssdk.services.dynamodb.model.*;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
-import java.util.Arrays;
-import java.util.List;
 
 @ApplicationScoped
 @Liveness
 @Readiness
+@RequestScoped
 public class DynamoDbHealthCheck implements HealthCheck {
 
     private DynamoDbClient dynamoDB;
@@ -26,31 +25,22 @@ public class DynamoDbHealthCheck implements HealthCheck {
                 .build();
     }
 
-    private static final List<String> REQUIRED_TABLES = Arrays.asList("CartDB", "CommentDB", "OrdersDB", "ProductCatalog");
+    private static final String REQUIRED_TABLE = "ProductCatalog";
 
     @Override
     public HealthCheckResponse call() {
         HealthCheckResponseBuilder responseBuilder = HealthCheckResponse.named("DynamoDB health check");
         try {
-            ListTablesResponse listTablesResponse = dynamoDB.listTables(ListTablesRequest.builder().build());
-            List<String> tables = listTablesResponse.tableNames();
+            DescribeTableResponse describeTableResponse = dynamoDB.describeTable(DescribeTableRequest.builder().tableName(REQUIRED_TABLE).build());
+            ProvisionedThroughputDescription throughput = describeTableResponse.table().provisionedThroughput();
 
-            for (String requiredTable : REQUIRED_TABLES) {
-                if (!tables.contains(requiredTable)) {
-                    return responseBuilder.down().withData("error", "Table " + requiredTable + " does not exist").build();
-                }
-
-                DescribeTableResponse describeTableResponse = dynamoDB.describeTable(DescribeTableRequest.builder().tableName(requiredTable).build());
-                ProvisionedThroughputDescription throughput = describeTableResponse.table().provisionedThroughput();
-
-                if (throughput.readCapacityUnits() < 1 || throughput.writeCapacityUnits() < 1) {
-                    return responseBuilder.down().withData("error", "Table " + requiredTable + " has insufficient read/write capacity").build();
-                }
+            if (throughput.readCapacityUnits() < 1 || throughput.writeCapacityUnits() < 1) {
+                return responseBuilder.down().withData("error", "Table " + REQUIRED_TABLE + " has insufficient read/write capacity").build();
             }
 
             return responseBuilder.up().build();
-        } catch (Exception e) {
-            return responseBuilder.down().withData("error", e.getMessage()).build();
+        } catch (DynamoDbException e) {
+            return responseBuilder.down().withData("error", "Table " + REQUIRED_TABLE + " does not exist or another error occurred").build();
         }
     }
 }
