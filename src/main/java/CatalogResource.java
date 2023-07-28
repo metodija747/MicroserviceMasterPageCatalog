@@ -22,7 +22,7 @@ import java.util.logging.Logger;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @RequestScoped
-@CrossOrigin
+@CrossOrigin(name = "catalog")
 public class CatalogResource {
 
     @Inject
