@@ -10,6 +10,8 @@ kumuluzee:
       exposed-headers: ""
       supports-credentials: true
       max-age: 3600
+  logs:
+    config-file-location: log4j2.xml
   name: catalog-service
   version: 1.0.0
   env:
