@@ -65,7 +65,7 @@ public class ResponseTransformer {
         Map<String, String> itemString = new HashMap<>();
         for (Map.Entry<String, AttributeValue> entry : item.entrySet()) {
             if (entry.getValue().s() != null) {
-                // If the attribute is "OrderList", parse the JSON string into a list of objects
+                // If the attribute is "OrderList",   parse the JSON string into a list of objects
                 if (entry.getKey().equals("OrderList")) {
                     String orderListStr = entry.getValue().s();
                     JsonParser parser = new JsonParser();
