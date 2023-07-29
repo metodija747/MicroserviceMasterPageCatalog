@@ -17,3 +17,10 @@ spec:
           image: openzipkin/zipkin
           ports:
             - containerPort: 9411
+          resources:
+            requests:
+              cpu: "100m" # 100 milliCPU
+              memory: "128Mi" # 128 Mebibytes
+            limits:
+              cpu: "100m" # 500 milliCPU
+              memory: "128Mi" # 512 Mebibytes

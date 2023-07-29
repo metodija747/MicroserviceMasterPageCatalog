@@ -7,7 +7,7 @@ import java.util.logging.Logger;
 
 @ApplicationPath("/")
 @LoginConfig(authMethod = "MP-JWT")
-//@RegisterService
+@RegisterService
 public class ProductCatalogApplication extends Application {
     private static final Logger LOG = Logger.getLogger(ProductCatalogApplication.class.getName());
 
