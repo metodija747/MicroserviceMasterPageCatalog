@@ -35,14 +35,14 @@ kumuluzee:
   server:
     http:
       port: 8080
-  discovery:
-    etcd:
-      hosts: http://etcd-client:2379
-  config:
-    start-retry-delay-ms: 500
-    max-retry-delay-ms: 1000
-    etcd:
-      hosts: http://etcd-client:2379
+#  discovery:
+#    etcd:
+#      hosts: http://etcd-client:2379
+#  config:
+#    start-retry-delay-ms: 500
+#    max-retry-delay-ms: 1000
+#    etcd:
+#      hosts: http://etcd-client:2379
   health:
     logs:
       enabled: true
@@ -66,7 +66,7 @@ kumuluzee:
   opentracing:
     zipkin:
       service-name: catalog-service
-      url: http://zipkin:9411
+      url: http://localhost:9411
       tags: key1=val1, key2=val2
       sampler:
         type: const
