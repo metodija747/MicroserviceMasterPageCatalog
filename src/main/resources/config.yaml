@@ -64,13 +64,20 @@ kumuluzee:
     jwks-uri: https://cognito-idp.us-east-1.amazonaws.com/us-east-1_cl8iVMzUw/.well-known/jwks.json
     issuer: https://cognito-idp.us-east-1.amazonaws.com/us-east-1_cl8iVMzUw
   opentracing:
-    zipkin:
+    jaeger:
       service-name: catalog-service
-      url: http://localhost:9411
-      tags: key1=val1, key2=val2
+      agent-host: localhost
+      agent-port: 5775
+      endpoint: http://localhost:14268/api/traces
+      reporter:
+        log-spans: true
+        max-queue-size: 10000
+        flush-interval: 1000
+        tags: key1=val1, key2=val2
       sampler:
         type: const
         param: 1
+      propagation: JAEGER
       traceid-128bit: true
 aws-config:
   dynamo-region: us-east-1

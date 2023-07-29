@@ -102,8 +102,8 @@
             </dependency>
             <dependency>
                 <groupId>com.kumuluz.ee.opentracing</groupId>
-                <artifactId>kumuluzee-opentracing-zipkin</artifactId>
-                <version>1.2.1</version>
+                <artifactId>kumuluzee-opentracing-jaeger</artifactId>
+                <version>1.3.1</version>
             </dependency>
         </dependencies>
 
