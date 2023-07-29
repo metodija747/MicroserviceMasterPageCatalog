@@ -62,7 +62,7 @@ public class CatalogResource {
     @Timed(name = "getProductTime", description = "Time taken to fetch a product")
     @Metered(name = "getProductMetered", description = "Rate of getProduct calls")
     @ConcurrentGauge(name = "getProductConcurrent", description = "Concurrent getProduct calls")
-    @Timeout(value = 5, unit = ChronoUnit.SECONDS) // Timeout after 5 seconds
+    @Timeout(value = 20, unit = ChronoUnit.SECONDS) // Timeout after 5 seconds
     @Retry(maxRetries = 3) // Retry up to 3 times
     @Fallback(fallbackMethod = "getProductFallback") // Fallback method if all retries fail
     @CircuitBreaker(requestVolumeThreshold = 1) // Use circuit breaker after 4 failed requests
