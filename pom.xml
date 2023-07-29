@@ -26,6 +26,12 @@
             <dependency>
                 <groupId>com.kumuluz.ee</groupId>
                 <artifactId>kumuluzee-microProfile-3.3</artifactId>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.eclipse.microprofile.metrics</groupId>
+                        <artifactId>microprofile-metrics-api</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>com.kumuluz.ee.config</groupId>
@@ -88,11 +94,6 @@
             <dependency>
                 <groupId>com.kumuluz.ee.metrics</groupId>
                 <artifactId>kumuluzee-metrics-core</artifactId>
-                <version>3.0.0</version>
-            </dependency>
-            <dependency>
-                <groupId>com.kumuluz.ee.metrics</groupId>
-                <artifactId>kumuluzee-metrics-logstash</artifactId>
                 <version>3.0.0</version>
             </dependency>
             <dependency>
