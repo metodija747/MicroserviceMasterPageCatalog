@@ -62,16 +62,17 @@ public class CatalogResource {
     @Timed(name = "getProductTime", description = "Time taken to fetch a product")
     @Metered(name = "getProductMetered", description = "Rate of getProduct calls")
     @ConcurrentGauge(name = "getProductConcurrent", description = "Concurrent getProduct calls")
-    @Timeout(value = 2, unit = ChronoUnit.SECONDS) // Timeout after 2 seconds
-//    @Retry(maxRetries = 3) // Retry up to 3 times
-//    @Fallback(fallbackMethod = "getProductFallback") // Fallback method if all retries fail
-//    @CircuitBreaker(requestVolumeThreshold = 4) // Use circuit breaker after 4 failed requests
-//    @Bulkhead(5) // Limit concurrent calls to 5
+    @Timeout(value = 5, unit = ChronoUnit.SECONDS) // Timeout after 5 seconds
+    @Retry(maxRetries = 3) // Retry up to 3 times
+    @Fallback(fallbackMethod = "getProductFallback") // Fallback method if all retries fail
+    @CircuitBreaker(requestVolumeThreshold = 4) // Use circuit breaker after 4 failed requests
+    @Bulkhead(5) // Limit concurrent calls to 5
     public Response getProduct(@PathParam("productId") String productId) {
-
+        LOGGER.info("getProduct method called");
         this.dynamoDB = DynamoDbClient.builder()
                 .region(Region.of(configProperties.getDynamoRegion()))
                 .build();
+
         LOGGER.info(configProperties.getCognitoIssuer() + configProperties.getTableName() + configProperties.getDynamoRegion());
         Map<String, AttributeValue> key = new HashMap<>();
         key.put("productId", AttributeValue.builder().s(productId).build());
@@ -80,7 +81,6 @@ public class CatalogResource {
                 .key(key)
                 .tableName(configProperties.getTableName())
                 .build();
-
         try {
             GetItemResponse getItemResponse = dynamoDB.getItem(request);
             Map<String, AttributeValue> item = getItemResponse.item();
@@ -88,16 +88,17 @@ public class CatalogResource {
 
             return Response.ok(transformedItem).build();
         } catch (DynamoDbException e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+            LOGGER.severe("Error while getting product: " + e.getMessage());
+            throw e;
         }
     }
 
     public Response getProductFallback(@PathParam("productId") String productId) {
         // Log the fallback
-        LOGGER.info("Details are not available at the moment for productId: " + productId);
+        LOGGER.info("Details are not available at the moment for the requested product");
         // Create a default response
         Map<String, String> response = new HashMap<>();
-        response.put("description", "Details are not available at the moment for productId: " + productId);
+        response.put("description", "Details are not available at the moment for the requested product");
 
         // Return the default product
         return Response.ok(response).build();
@@ -110,11 +111,11 @@ public class CatalogResource {
     @Timed(name = "getProductsTime", description = "Time taken to fetch products")
     @Metered(name = "getProductsMetered", description = "Rate of getProducts calls")
     @ConcurrentGauge(name = "getProductsConcurrent", description = "Concurrent getProducts calls")
-//    @Timeout(value = 5, unit = ChronoUnit.SECONDS) // Timeout after 5 seconds
-//    @Retry(maxRetries = 3) // Retry up to 3 times
-//    @Fallback(fallbackMethod = "getProductsFallback") // Fallback method if all retries fail
-//    @CircuitBreaker(requestVolumeThreshold = 4) // Use circuit breaker after 4 failed requests
-//    @Bulkhead(10) // Limit concurrent calls to 10
+    @Timeout(value = 5, unit = ChronoUnit.SECONDS) // Timeout after 5 seconds
+    @Retry(maxRetries = 3) // Retry up to 3 times
+    @Fallback(fallbackMethod = "getProductsFallback") // Fallback method if all retries fail
+    @CircuitBreaker(requestVolumeThreshold = 4) // Use circuit breaker after 4 failed requests
+    @Bulkhead(10) // Limit concurrent calls to 10
     public Response getProducts(@QueryParam("searchTerm") String searchTerm,
                                 @QueryParam("sortBy") String sortBy,
                                 @QueryParam("sortOrder") String sortOrder,
@@ -227,11 +228,11 @@ public class CatalogResource {
     @Timed(name = "addProductTime", description = "Time taken to add a product")
     @Metered(name = "addProductMetered", description = "Rate of addProduct calls")
     @ConcurrentGauge(name = "addProductConcurrent", description = "Concurrent addProduct calls")
-//    @Timeout(value = 2, unit = ChronoUnit.SECONDS) // Timeout after 2 seconds
-//    @Retry(maxRetries = 3) // Retry up to 3 times
-//    @Fallback(fallbackMethod = "addProductFallback") // Fallback method if all retries fail
-//    @CircuitBreaker(requestVolumeThreshold = 4) // Use circuit breaker after 4 failed requests
-//    @Bulkhead(5) // Limit concurrent calls to 5
+    @Timeout(value = 2, unit = ChronoUnit.SECONDS) // Timeout after 2 seconds
+    @Retry(maxRetries = 3) // Retry up to 3 times
+    @Fallback(fallbackMethod = "addProductFallback") // Fallback method if all retries fail
+    @CircuitBreaker(requestVolumeThreshold = 4) // Use circuit breaker after 4 failed requests
+    @Bulkhead(5) // Limit concurrent calls to 5
     public Response addProduct(Product product) {
         if (jwt == null) {
             return Response.status(Response.Status.UNAUTHORIZED).entity("Unauthorized: only authenticated users can update product ratings.").build();
@@ -283,11 +284,11 @@ public class CatalogResource {
     @Timed(name = "updateProductRatingTime", description = "Time taken to update a product rating")
     @Metered(name = "updateProductRatingMetered", description = "Rate of updateProductRating calls")
     @ConcurrentGauge(name = "updateProductRatingConcurrent", description = "Concurrent updateProductRating calls")
-//    @Timeout(value = 2, unit = ChronoUnit.SECONDS) // Timeout after 2 seconds
-//    @Retry(maxRetries = 3) // Retry up to 3 times
-//    @Fallback(fallbackMethod = "updateProductRatingFallback") // Fallback method if all retries fail
-//    @CircuitBreaker(requestVolumeThreshold = 4) // Use circuit breaker after 4 failed requests
-//    @Bulkhead(5) // Limit concurrent calls to 5
+    @Timeout(value = 2, unit = ChronoUnit.SECONDS) // Timeout after 2 seconds
+    @Retry(maxRetries = 3) // Retry up to 3 times
+    @Fallback(fallbackMethod = "updateProductRatingFallback") // Fallback method if all retries fail
+    @CircuitBreaker(requestVolumeThreshold = 4) // Use circuit breaker after 4 failed requests
+    @Bulkhead(5) // Limit concurrent calls to 5
     public Response updateProductRating(@PathParam("productId") String productId,
                                         double avgRating,
                                         @QueryParam("action") String action) {
@@ -359,11 +360,11 @@ public class CatalogResource {
     @Timed(name = "deleteProductTime", description = "Time taken to delete a product")
     @Metered(name = "deleteProductMetered", description = "Rate of deleteProduct calls")
     @ConcurrentGauge(name = "deleteProductConcurrent", description = "Concurrent deleteProduct calls")
-//    @Timeout(value = 2, unit = ChronoUnit.SECONDS) // Timeout after 2 seconds
-//    @Retry(maxRetries = 3) // Retry up to 3 times
-//    @Fallback(fallbackMethod = "deleteProductFallback") // Fallback method if all retries fail
-//    @CircuitBreaker(requestVolumeThreshold = 4) // Use circuit breaker after 4 failed requests
-//    @Bulkhead(5) // Limit concurrent calls to 5
+    @Timeout(value = 2, unit = ChronoUnit.SECONDS) // Timeout after 2 seconds
+    @Retry(maxRetries = 3) // Retry up to 3 times
+    @Fallback(fallbackMethod = "deleteProductFallback") // Fallback method if all retries fail
+    @CircuitBreaker(requestVolumeThreshold = 4) // Use circuit breaker after 4 failed requests
+    @Bulkhead(5) // Limit concurrent calls to 5
     public Response deleteProduct(@PathParam("productId") String productId) {
         try {
             if (jwt == null) {
@@ -388,11 +389,11 @@ public class CatalogResource {
 
     public Response deleteProductFallback(@PathParam("productId") String productId) {
         // Log the fallback
-        LOGGER.info("Unable to delete product at the moment for productId: " + productId);
+        LOGGER.info("Unable to delete product at the moment");
 
         // Create a default response
         Map<String, String> response = new HashMap<>();
-        response.put("description", "Unable to delete product at the moment for productId: " + productId);
+        response.put("description", "Unable to delete product at the moment");
 
         // Return the default response
         return Response.ok(response).build();
