@@ -39,11 +39,6 @@ public class CatalogResource {
     private ConfigProperties configProperties;
 
     @Inject
-    @Claim("cognito:groups")
-    private ClaimValue<JsonArray> cognitoGroups;
-    JsonArray groupsArray = cognitoGroups.getValue();
-
-    @Inject
     private JsonWebToken jwt;
 
     @Inject
