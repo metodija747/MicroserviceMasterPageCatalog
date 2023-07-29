@@ -63,6 +63,15 @@ kumuluzee:
   jwt-auth:
     jwks-uri: https://cognito-idp.us-east-1.amazonaws.com/us-east-1_cl8iVMzUw/.well-known/jwks.json
     issuer: https://cognito-idp.us-east-1.amazonaws.com/us-east-1_cl8iVMzUw
+  opentracing:
+    zipkin:
+      service-name: catalog-service # if not set kumuluzee.name value is used
+      url: http://zipkin:9411 # replace with your Zipkin server URL
+      tags: key1=val1, key2=val2
+      sampler:
+        type: const # default sampler type
+        param: 1 # default sampler param
+      traceid-128bit: true
 aws-config:
   dynamo-region: us-east-1
   table-name: ProductCatalog

@@ -12,6 +12,8 @@ import com.kumuluz.ee.cors.annotations.CrossOrigin;
 import com.kumuluz.ee.discovery.annotations.DiscoverService;
 import com.kumuluz.ee.logs.cdi.Log;
 import com.kumuluz.ee.logs.cdi.LogParams;
+import io.opentracing.Span;
+import io.opentracing.Tracer;
 import org.eclipse.microprofile.faulttolerance.*;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.jwt.ClaimValue;
@@ -42,6 +44,9 @@ public class CatalogResource {
     private JsonWebToken jwt;
 
     @Inject
+    private Tracer tracer;
+
+    @Inject
     @DiscoverService(value = "comment-service", environment = "dev", version = "1.0.0")
     private Optional<URL> productCommentsUrl;
 
@@ -68,28 +73,38 @@ public class CatalogResource {
     @CircuitBreaker(requestVolumeThreshold = 1) // Use circuit breaker after 4 failed requests
     @Bulkhead(5) // Limit concurrent calls to 5
     public Response getProduct(@PathParam("productId") String productId) {
-        LOGGER.info("getProduct method called");
-        this.dynamoDB = DynamoDbClient.builder()
-                .region(Region.of(configProperties.getDynamoRegion()))
-                .build();
-
-        LOGGER.info(configProperties.getCognitoIssuer() + configProperties.getTableName() + configProperties.getDynamoRegion());
-        Map<String, AttributeValue> key = new HashMap<>();
-        key.put("productId", AttributeValue.builder().s(productId).build());
-
-        GetItemRequest request = GetItemRequest.builder()
-                .key(key)
-                .tableName(configProperties.getTableName())
-                .build();
+        Span span = tracer.buildSpan("getProduct").start();
+        span.setTag("productId", productId);
+        Map<String, Object> logMap = new HashMap<>();
+        logMap.put("event", "getProduct");
+        logMap.put("value", productId);
+        span.log(logMap);
         try {
-            GetItemResponse getItemResponse = dynamoDB.getItem(request);
-            Map<String, AttributeValue> item = getItemResponse.item();
-            Map<String, String> transformedItem = ResponseTransformer.transformItem(item);
+            LOGGER.info("getProduct method called");
+            this.dynamoDB = DynamoDbClient.builder()
+                    .region(Region.of(configProperties.getDynamoRegion()))
+                    .build();
 
-            return Response.ok(transformedItem).build();
-        } catch (DynamoDbException e) {
-            LOGGER.severe("Error while getting product: " + e.getMessage());
-            throw e;
+            LOGGER.info(configProperties.getCognitoIssuer() + configProperties.getTableName() + configProperties.getDynamoRegion());
+            Map<String, AttributeValue> key = new HashMap<>();
+            key.put("productId", AttributeValue.builder().s(productId).build());
+
+            GetItemRequest request = GetItemRequest.builder()
+                    .key(key)
+                    .tableName(configProperties.getTableName())
+                    .build();
+            try {
+                GetItemResponse getItemResponse = dynamoDB.getItem(request);
+                Map<String, AttributeValue> item = getItemResponse.item();
+                Map<String, String> transformedItem = ResponseTransformer.transformItem(item);
+
+                return Response.ok(transformedItem).build();
+            } catch (DynamoDbException e) {
+                LOGGER.severe("Error while getting product: " + e.getMessage());
+                throw e;
+            }
+        } finally {
+            span.finish();
         }
     }
 
