@@ -110,11 +110,11 @@ public class CatalogResource {
     @Timed(name = "getProductsTime", description = "Time taken to fetch products")
     @Metered(name = "getProductsMetered", description = "Rate of getProducts calls")
     @ConcurrentGauge(name = "getProductsConcurrent", description = "Concurrent getProducts calls")
-    @Timeout(value = 5, unit = ChronoUnit.SECONDS) // Timeout after 5 seconds
-    @Retry(maxRetries = 3) // Retry up to 3 times
-    @Fallback(fallbackMethod = "getProductsFallback") // Fallback method if all retries fail
-    @CircuitBreaker(requestVolumeThreshold = 4) // Use circuit breaker after 4 failed requests
-    @Bulkhead(10) // Limit concurrent calls to 10
+//    @Timeout(value = 5, unit = ChronoUnit.SECONDS) // Timeout after 5 seconds
+//    @Retry(maxRetries = 3) // Retry up to 3 times
+//    @Fallback(fallbackMethod = "getProductsFallback") // Fallback method if all retries fail
+//    @CircuitBreaker(requestVolumeThreshold = 4) // Use circuit breaker after 4 failed requests
+//    @Bulkhead(10) // Limit concurrent calls to 10
     public Response getProducts(@QueryParam("searchTerm") String searchTerm,
                                 @QueryParam("sortBy") String sortBy,
                                 @QueryParam("sortOrder") String sortOrder,
@@ -227,11 +227,11 @@ public class CatalogResource {
     @Timed(name = "addProductTime", description = "Time taken to add a product")
     @Metered(name = "addProductMetered", description = "Rate of addProduct calls")
     @ConcurrentGauge(name = "addProductConcurrent", description = "Concurrent addProduct calls")
-    @Timeout(value = 2, unit = ChronoUnit.SECONDS) // Timeout after 2 seconds
-    @Retry(maxRetries = 3) // Retry up to 3 times
-    @Fallback(fallbackMethod = "addProductFallback") // Fallback method if all retries fail
-    @CircuitBreaker(requestVolumeThreshold = 4) // Use circuit breaker after 4 failed requests
-    @Bulkhead(5) // Limit concurrent calls to 5
+//    @Timeout(value = 2, unit = ChronoUnit.SECONDS) // Timeout after 2 seconds
+//    @Retry(maxRetries = 3) // Retry up to 3 times
+//    @Fallback(fallbackMethod = "addProductFallback") // Fallback method if all retries fail
+//    @CircuitBreaker(requestVolumeThreshold = 4) // Use circuit breaker after 4 failed requests
+//    @Bulkhead(5) // Limit concurrent calls to 5
     public Response addProduct(Product product) {
         if (jwt == null) {
             return Response.status(Response.Status.UNAUTHORIZED).entity("Unauthorized: only authenticated users can update product ratings.").build();
@@ -283,11 +283,11 @@ public class CatalogResource {
     @Timed(name = "updateProductRatingTime", description = "Time taken to update a product rating")
     @Metered(name = "updateProductRatingMetered", description = "Rate of updateProductRating calls")
     @ConcurrentGauge(name = "updateProductRatingConcurrent", description = "Concurrent updateProductRating calls")
-    @Timeout(value = 2, unit = ChronoUnit.SECONDS) // Timeout after 2 seconds
-    @Retry(maxRetries = 3) // Retry up to 3 times
-    @Fallback(fallbackMethod = "updateProductRatingFallback") // Fallback method if all retries fail
-    @CircuitBreaker(requestVolumeThreshold = 4) // Use circuit breaker after 4 failed requests
-    @Bulkhead(5) // Limit concurrent calls to 5
+//    @Timeout(value = 2, unit = ChronoUnit.SECONDS) // Timeout after 2 seconds
+//    @Retry(maxRetries = 3) // Retry up to 3 times
+//    @Fallback(fallbackMethod = "updateProductRatingFallback") // Fallback method if all retries fail
+//    @CircuitBreaker(requestVolumeThreshold = 4) // Use circuit breaker after 4 failed requests
+//    @Bulkhead(5) // Limit concurrent calls to 5
     public Response updateProductRating(@PathParam("productId") String productId,
                                         double avgRating,
                                         @QueryParam("action") String action) {
@@ -359,11 +359,11 @@ public class CatalogResource {
     @Timed(name = "deleteProductTime", description = "Time taken to delete a product")
     @Metered(name = "deleteProductMetered", description = "Rate of deleteProduct calls")
     @ConcurrentGauge(name = "deleteProductConcurrent", description = "Concurrent deleteProduct calls")
-    @Timeout(value = 2, unit = ChronoUnit.SECONDS) // Timeout after 2 seconds
-    @Retry(maxRetries = 3) // Retry up to 3 times
-    @Fallback(fallbackMethod = "deleteProductFallback") // Fallback method if all retries fail
-    @CircuitBreaker(requestVolumeThreshold = 4) // Use circuit breaker after 4 failed requests
-    @Bulkhead(5) // Limit concurrent calls to 5
+//    @Timeout(value = 2, unit = ChronoUnit.SECONDS) // Timeout after 2 seconds
+//    @Retry(maxRetries = 3) // Retry up to 3 times
+//    @Fallback(fallbackMethod = "deleteProductFallback") // Fallback method if all retries fail
+//    @CircuitBreaker(requestVolumeThreshold = 4) // Use circuit breaker after 4 failed requests
+//    @Bulkhead(5) // Limit concurrent calls to 5
     public Response deleteProduct(@PathParam("productId") String productId) {
         try {
             if (jwt == null) {
