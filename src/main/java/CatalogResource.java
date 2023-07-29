@@ -20,6 +20,7 @@ import org.eclipse.microprofile.jwt.ClaimValue;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.eclipse.microprofile.metrics.Histogram;
 import org.eclipse.microprofile.metrics.annotation.*;
+import org.eclipse.microprofile.opentracing.Traced;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
@@ -43,8 +44,8 @@ public class CatalogResource {
     @Inject
     private JsonWebToken jwt;
 
-    @Inject
-    private Tracer tracer;
+//    @Inject
+//    private Tracer tracer;
 
     @Inject
     @DiscoverService(value = "comment-service", environment = "dev", version = "1.0.0")
@@ -72,14 +73,15 @@ public class CatalogResource {
     @Fallback(fallbackMethod = "getProductFallback") // Fallback method if all retries fail
     @CircuitBreaker(requestVolumeThreshold = 1) // Use circuit breaker after 4 failed requests
     @Bulkhead(5) // Limit concurrent calls to 5
+    @Traced
     public Response getProduct(@PathParam("productId") String productId) {
-        Span span = tracer.buildSpan("getProduct").start();
-        span.setTag("productId", productId);
-        Map<String, Object> logMap = new HashMap<>();
-        logMap.put("event", "getProduct");
-        logMap.put("value", productId);
-        span.log(logMap);
-        try {
+//        Span span = tracer.buildSpan("getProduct").start();
+//        span.setTag("productId", productId);
+//        Map<String, Object> logMap = new HashMap<>();
+//        logMap.put("event", "getProduct");
+//        logMap.put("value", productId);
+//        span.log(logMap);
+//        try {
             LOGGER.info("getProduct method called");
             this.dynamoDB = DynamoDbClient.builder()
                     .region(Region.of(configProperties.getDynamoRegion()))
@@ -103,9 +105,9 @@ public class CatalogResource {
                 LOGGER.severe("Error while getting product: " + e.getMessage());
                 throw e;
             }
-        } finally {
-            span.finish();
-        }
+//        } finally {
+//            span.finish();
+//        }
     }
 
     public Response getProductFallback(@PathParam("productId") String productId) {
