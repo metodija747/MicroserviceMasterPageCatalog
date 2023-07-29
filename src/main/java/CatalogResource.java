@@ -66,7 +66,7 @@ public class CatalogResource {
     @Retry(maxRetries = 3) // Retry up to 3 times
     @Fallback(fallbackMethod = "getProductFallback") // Fallback method if all retries fail
     @CircuitBreaker(requestVolumeThreshold = 4) // Use circuit breaker after 4 failed requests
-    @Bulkhead(5) // Limit concurrent calls to 5
+    @Bulkhead(1) // Limit concurrent calls to 5
     public Response getProduct(@PathParam("productId") String productId) {
         LOGGER.info("getProduct method called");
         this.dynamoDB = DynamoDbClient.builder()
