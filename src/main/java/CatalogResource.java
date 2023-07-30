@@ -107,9 +107,7 @@ public class CatalogResource {
         logMap.put("event", "getProduct");
         logMap.put("value", productId);
         logMap.put("groups", groups.getValue());
-        logMap.put("tokenID", jwt.getTokenID());
-        logMap.put("rawToken", jwt.getRawToken());
-
+        logMap.put("email", jwt.getClaim("email"));
         span.log(logMap);
         LOGGER.info("getProduct method called");
         checkAndUpdateDynamoDbClient();
