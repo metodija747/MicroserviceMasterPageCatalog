@@ -5,7 +5,7 @@ import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 import java.util.logging.Logger;
 
-@ApplicationPath("/v1")
+@ApplicationPath("/")
 @LoginConfig(authMethod = "MP-JWT")
 @RegisterService
 public class ProductCatalogApplication extends Application {
