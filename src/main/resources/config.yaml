@@ -40,7 +40,7 @@ kumuluzee:
       hosts: http://etcd-client:2379
   config:
     start-retry-delay-ms: 500
-    max-retry-delay-ms: 1000
+    max-retry-delay-ms: 90000
     etcd:
       hosts: http://etcd-client:2379
   health:

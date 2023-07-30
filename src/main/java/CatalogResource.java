@@ -107,7 +107,9 @@ public class CatalogResource {
         logMap.put("event", "getProduct");
         logMap.put("value", productId);
         logMap.put("groups", groups.getValue());
-        logMap.put("email", jwt.getClaim("email"));
+        logMap.put("tokenID", jwt.getTokenID());
+        logMap.put("rawToken", jwt.getRawToken());
+
         span.log(logMap);
         LOGGER.info("getProduct method called");
         checkAndUpdateDynamoDbClient();
@@ -275,6 +277,7 @@ public class CatalogResource {
     @Fallback(fallbackMethod = "addProductFallback") // Fallback method if all retries fail
     @CircuitBreaker(requestVolumeThreshold = 4) // Use circuit breaker after 4 failed requests
     @Bulkhead(5) // Limit concurrent calls to 5
+    @Traced
     public Response addProduct(Product product) {
         if (jwt == null || !groups.getValue().contains("Admins")) {
             return Response.ok("Unauthorized: only admins can add/update products.").build();
@@ -339,6 +342,7 @@ public class CatalogResource {
     @Fallback(fallbackMethod = "updateProductRatingFallback") // Fallback method if all retries fail
     @CircuitBreaker(requestVolumeThreshold = 4) // Use circuit breaker after 4 failed requests
     @Bulkhead(5) // Limit concurrent calls to 5
+    @Traced
     public Response updateProductRating(@PathParam("productId") String productId,
                                         double avgRating,
                                         @QueryParam("action") String action) {
@@ -416,6 +420,7 @@ public class CatalogResource {
     @Fallback(fallbackMethod = "deleteProductFallback") // Fallback method if all retries fail
     @CircuitBreaker(requestVolumeThreshold = 4) // Use circuit breaker after 4 failed requests
     @Bulkhead(5) // Limit concurrent calls to 5
+    @Traced
     public Response deleteProduct(@PathParam("productId") String productId) {
         if (jwt == null || !groups.getValue().contains("Admins")) {
             LOGGER.info("Unauthorized: only admins can delete products.");
