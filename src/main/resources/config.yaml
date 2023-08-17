@@ -64,6 +64,12 @@ kumuluzee:
     servlet:
       enabled: true
       mapping: /metrics
+      logstash:
+        enabled: true
+        address: https://458a0729e5154bb7b46d58fa98fe93e1.us-central1.gcp.cloud.es.io
+        port: 443
+        period-s: 60
+
   jwt-auth:
     jwks-uri: https://cognito-idp.us-east-1.amazonaws.com/us-east-1_cl8iVMzUw/.well-known/jwks.json
     issuer: https://cognito-idp.us-east-1.amazonaws.com/us-east-1_cl8iVMzUw
