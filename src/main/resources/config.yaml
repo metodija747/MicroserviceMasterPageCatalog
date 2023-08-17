@@ -18,17 +18,15 @@ kumuluzee:
                  <Console name="console" target="SYSTEM_OUT">
                      <PatternLayout pattern="%d %p %marker %m %X %ex %n"/>
                  </Console>
-
-          <File name="fileLog" fileName="/app/logs/myapp.log">
-          <PatternLayout pattern="%d %p %marker %m %X %ex %n"/>
-          </File>
-
+                 <Socket name="logstash" host="192.168.99.100" port="5043" protocol="tcp">
+                 <JSONLayout complete="false" compact="true" eventEol="true" charset="UTF-8" properties="true"/>
+                 </Socket>
           </Appenders>
           <Loggers>
           <!-- Default logger -->
           <Root level="trace">
           <AppenderRef ref="console"/>
-          <AppenderRef ref="fileLog"/>
+          <AppenderRef ref="logstash"/>
           </Root>
           </Loggers>
           </Configuration>'
@@ -66,8 +64,8 @@ kumuluzee:
       mapping: /metrics
       logstash:
         enabled: true
-        address: https://458a0729e5154bb7b46d58fa98fe93e1.us-central1.gcp.cloud.es.io
-        port: 443
+        address: 192.168.99.100
+        port: 5043
         period-s: 60
 
   jwt-auth:
