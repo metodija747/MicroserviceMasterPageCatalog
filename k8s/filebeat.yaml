@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: filebeat-config
+data:
+  filebeat.yml: |
+    filebeat.inputs:
+    - type: log
+      enabled: true
+      paths:
+        - /app/logs/*.log
+
+    output.elasticsearch:
+      hosts: ["https://458a0729e5154bb7b46d58fa98fe93e1.us-central1.gcp.cloud.es.io:443"]
+      username: "elastic"
+      password: "XTLlwM6Bxqq2OTHhJ8qIhac6"
+      protocol: "https"
+      ssl.verification_mode: "full"
