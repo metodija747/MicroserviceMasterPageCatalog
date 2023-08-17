@@ -18,9 +18,9 @@ kumuluzee:
                  <Console name="console" target="SYSTEM_OUT">
                      <PatternLayout pattern="%d %p %marker %m %X %ex %n"/>
                  </Console>
-                 <Socket name="logstash" host="192.168.99.100" port="5043" protocol="tcp">
+#                 <Socket name="logstash" host="192.168.99.100" port="5043" protocol="tcp">
                  <JSONLayout complete="false" compact="true" eventEol="true" charset="UTF-8" properties="true"/>
-                 </Socket>
+#                 </Socket>
           </Appenders>
           <Loggers>
           <!-- Default logger -->
@@ -37,14 +37,14 @@ kumuluzee:
   server:
     http:
       port: 8080
-  discovery:
-    etcd:
-      hosts: http://etcd-client:2379
-  config:
-    start-retry-delay-ms: 500
-    max-retry-delay-ms: 90000
-    etcd:
-      hosts: http://etcd-client:2379
+#  discovery:
+#    etcd:
+#      hosts: http://etcd-client:2379
+#  config:
+#    start-retry-delay-ms: 500
+#    max-retry-delay-ms: 90000
+#    etcd:
+#      hosts: http://etcd-client:2379
   health:
     logs:
       enabled: true
@@ -64,9 +64,6 @@ kumuluzee:
       mapping: /metrics
       logstash:
         enabled: true
-        address: 192.168.99.100
-        port: 5043
-        period-s: 60
 
   jwt-auth:
     jwks-uri: https://cognito-idp.us-east-1.amazonaws.com/us-east-1_cl8iVMzUw/.well-known/jwks.json
