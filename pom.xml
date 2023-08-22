@@ -60,16 +60,16 @@
                 <groupId>com.kumuluz.ee</groupId>
                 <artifactId>kumuluzee-jax-rs-jersey</artifactId>
             </dependency>
-<!--            <dependency>-->
-<!--                <groupId>com.kumuluz.ee.discovery</groupId>-->
-<!--                <artifactId>kumuluzee-discovery-etcd</artifactId>-->
-<!--                <version>1.1.1</version>-->
-<!--            </dependency>-->
-<!--            <dependency>-->
-<!--                <groupId>com.kumuluz.ee.config</groupId>-->
-<!--                <artifactId>kumuluzee-config-etcd</artifactId>-->
-<!--                <version>1.3.0</version>-->
-<!--            </dependency>-->
+            <dependency>
+                <groupId>com.kumuluz.ee.discovery</groupId>
+                <artifactId>kumuluzee-discovery-etcd</artifactId>
+                <version>1.1.1</version>
+            </dependency>
+            <dependency>
+                <groupId>com.kumuluz.ee.config</groupId>
+                <artifactId>kumuluzee-config-etcd</artifactId>
+                <version>1.3.0</version>
+            </dependency>
             <dependency>
                 <groupId>com.kumuluz.ee.cors</groupId>
                 <artifactId>kumuluzee-cors</artifactId>
@@ -90,11 +90,11 @@
                 <artifactId>kumuluzee-metrics-core</artifactId>
                 <version>2.3.0</version>
             </dependency>
-<!--            <dependency>-->
-<!--                <groupId>com.kumuluz.ee.metrics</groupId>-->
-<!--                <artifactId>kumuluzee-metrics-logstash</artifactId>-->
-<!--                <version>2.3.0</version>-->
-<!--            </dependency>-->
+            <dependency>
+                <groupId>com.kumuluz.ee.metrics</groupId>
+                <artifactId>kumuluzee-metrics-logstash</artifactId>
+                <version>2.3.0</version>
+            </dependency>
             <dependency>
                 <groupId>com.kumuluz.ee.fault.tolerance</groupId>
                 <artifactId>kumuluzee-fault-tolerance-smallrye</artifactId>
@@ -115,11 +115,11 @@
                 <artifactId>kumuluzee-jwt-auth</artifactId>
                 <version>1.1.3</version>
             </dependency>
-<!--            <dependency>-->
-<!--                <groupId>com.kumuluz.ee.opentracing</groupId>-->
-<!--                <artifactId>kumuluzee-opentracing-jaeger</artifactId>-->
-<!--                <version>1.3.1</version>-->
-<!--            </dependency>-->
+            <dependency>
+                <groupId>com.kumuluz.ee.opentracing</groupId>
+                <artifactId>kumuluzee-opentracing-jaeger</artifactId>
+                <version>1.3.1</version>
+            </dependency>
         </dependencies>
 
     <properties>
