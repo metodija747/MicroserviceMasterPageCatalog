@@ -4,7 +4,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import com.kumuluz.ee.discovery.annotations.DiscoverService;
+//import com.kumuluz.ee.discovery.annotations.DiscoverService;
 import com.kumuluz.ee.logs.cdi.Log;
 import com.kumuluz.ee.logs.cdi.LogParams;
 import io.opentracing.Span;
@@ -16,6 +16,12 @@ import org.eclipse.microprofile.jwt.Claims;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.eclipse.microprofile.metrics.Histogram;
 import org.eclipse.microprofile.metrics.annotation.*;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.opentracing.Traced;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
@@ -34,14 +40,6 @@ import java.util.logging.Logger;
 @Log(LogParams.METRICS)
 public class CatalogResource {
 
-//    @Inject
-//    @Claim("sub")
-//    private ClaimValue<Optional<String>> optSubject;
-
-//    @Inject
-//    @Claim(standard = Claims.email)
-//    private String email;
-
     @Inject
     private Tracer tracer;
 
@@ -55,13 +53,13 @@ public class CatalogResource {
     @Inject
     private JsonWebToken jwt;
 
-    @Inject
-    @DiscoverService(value = "comment-service", environment = "dev", version = "1.0.0")
-    private Optional<URL> productCommentsUrl;
-
-    @Inject
-    @DiscoverService(value = "cart-service", environment = "dev", version = "1.0.0")
-    private Optional<URL> cartServiceUrl;
+//    @Inject
+//    @DiscoverService(value = "comment-service", environment = "dev", version = "1.0.0")
+//    private Optional<URL> productCommentsUrl;
+//
+//    @Inject
+//    @DiscoverService(value = "cart-service", environment = "dev", version = "1.0.0")
+//    private Optional<URL> cartServiceUrl;
 
     private DynamoDbClient dynamoDB;
     private static final Logger LOGGER = Logger.getLogger(CatalogResource.class.getName());
@@ -89,6 +87,12 @@ public class CatalogResource {
     }
 
     @GET
+    @Operation(summary = "Get product by ID", description = "Fetches the details of a specific product by its ID.")
+    @APIResponse(
+            description = "Either the details of the retrieved product or an error message. For example, an error response could be: { 'description': 'Unable to fetch product at the moment. Please try again later.' }",
+            responseCode = "200",
+            content = @Content(schema = @Schema(implementation = Product.class))
+    )
     @Path("/{productId}")
     @Counted(name = "getProductCount", description = "Count of getProduct calls")
     @Timed(name = "getProductTime", description = "Time taken to fetch a product")
@@ -100,14 +104,14 @@ public class CatalogResource {
     @CircuitBreaker(requestVolumeThreshold = 4) // Use circuit breaker after 4 failed requests
     @Bulkhead(5) // Limit concurrent calls to 5
     @Traced
-    public Response getProduct(@PathParam("productId") String productId) {
+    public Response getProduct(
+            @Parameter(description = "Unique identifier for the product", required = true, example = "a9abe32e-9bd6-43aa-bc00-9044a27b858b2")
+            @PathParam("productId") String productId) {
         Span span = tracer.buildSpan("getProduct").start();
         span.setTag("productId", productId);
         Map<String, Object> logMap = new HashMap<>();
         logMap.put("event", "getProduct");
         logMap.put("value", productId);
-        logMap.put("groups", groups.getValue());
-        logMap.put("email", jwt.getClaim("email"));
         span.log(logMap);
         LOGGER.info("getProduct method called");
         checkAndUpdateDynamoDbClient();
@@ -135,6 +139,8 @@ public class CatalogResource {
         span.finish();
         }
     }
+
+    @Operation(summary = "Fallback for getProduct", description = "Returns a default response when getProduct fails.")
     public Response getProductFallback(@PathParam("productId") String productId) {
         LOGGER.info("Fallback activated: Unable to fetch product at the moment for productId: " + productId);
         Map<String, String> response = new HashMap<>();
@@ -142,127 +148,127 @@ public class CatalogResource {
         return Response.ok(response).build();
     }
 
-    @GET
-    @Counted(name = "getProductsCount", description = "Count of getProducts calls")
-    @Timed(name = "getProductsTime", description = "Time taken to fetch products")
-    @Metered(name = "getProductsMetered", description = "Rate of getProducts calls")
-    @ConcurrentGauge(name = "getProductsConcurrent", description = "Concurrent getProducts calls")
-    @Timeout(value = 20, unit = ChronoUnit.SECONDS) // Timeout after 5 seconds
-    @Retry(maxRetries = 3) // Retry up to 3 times
-    @Fallback(fallbackMethod = "getProductsFallback") // Fallback method if all retries fail
-    @CircuitBreaker(requestVolumeThreshold = 4) // Use circuit breaker after 4 failed requests
-    @Bulkhead(10) // Limit concurrent calls to 10
-    @Traced
-    public Response getProducts(@QueryParam("searchTerm") String searchTerm,
-                                @QueryParam("sortBy") String sortBy,
-                                @QueryParam("sortOrder") String sortOrder,
-                                @QueryParam("category") String category,
-                                @QueryParam("page") Integer page,
-                                @QueryParam("pageSize") Integer pageSize) {
-        long startTime = System.nanoTime();
-        Span span = tracer.buildSpan("getProducts").start();
-        Map<String, Object> logMap = new HashMap<>();
-        logMap.put("searchTerm", searchTerm);
-        logMap.put("sortBy", sortBy);
-        logMap.put("sortOrder", sortOrder);
-        logMap.put("category", category);
-        logMap.put("page", page);
-        logMap.put("pageSize", pageSize);
-        span.log(logMap);
-        LOGGER.info("getProducts method called");
-        checkAndUpdateDynamoDbClient();
-        try {
-            if (page == null) {
-                page = 1;
-            }
-            if (pageSize == null) {
-                pageSize = 4;
-            }
-            ScanRequest.Builder scanRequestBuilder = ScanRequest.builder().tableName(currentTableName);
-            String filterExpression = "";
-            Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-
-            if (searchTerm != null && !searchTerm.isEmpty()) {
-                filterExpression += "contains(productName, :val)";
-                expressionAttributeValues.put(":val", AttributeValue.builder().s(searchTerm).build());
-            }
-
-            if (category != null && !category.isEmpty()) {
-                if (!filterExpression.isEmpty()) {
-                    filterExpression += " AND ";
-                }
-                filterExpression += "categoryName = :cat";
-                expressionAttributeValues.put(":cat", AttributeValue.builder().s(category).build());
-            }
-
-            if (!filterExpression.isEmpty()) {
-                scanRequestBuilder.filterExpression(filterExpression)
-                        .expressionAttributeValues(expressionAttributeValues);
-            }
-
-            ScanRequest scanRequest = scanRequestBuilder.build();
-            ScanResponse scanResponse = dynamoDB.scan(scanRequest);
-
-            List<Map<String, AttributeValue>> items = scanResponse.items();
-            List<Map<String, AttributeValue>> sortedItems = new ArrayList<>(items);
-
-            if (sortBy != null && !sortBy.isEmpty()) {
-                switch (sortBy) {
-                    case "AverageRating":
-                        sortedItems.sort(Comparator.comparing(item -> Double.parseDouble(item.get("AverageRating").n())));
-                        if (sortOrder != null && sortOrder.equalsIgnoreCase("DSC")) Collections.reverse(sortedItems);
-                        items = sortedItems;
-                        break;
-                    case "Price":
-                        sortedItems.sort(Comparator.comparing(item -> Double.parseDouble(item.get("Price").n())));
-                        if (sortOrder != null && sortOrder.equalsIgnoreCase("DSC")) Collections.reverse(sortedItems);
-                        items = sortedItems;
-                        break;
-                    default:
-                        break;
-                }
-            }
-
-            int totalPages = (int) Math.ceil((double) items.size() / pageSize);
-
-            int start = (page - 1) * pageSize;
-            int end = Math.min(start + pageSize, items.size());
-            List<Map<String, AttributeValue>> pagedItems = items.subList(start, end);
-
-            List<Map<String, String>> itemsString = ResponseTransformer.transformItems(pagedItems);
-            Map<String, Object> responseBody = new HashMap<>();
-            responseBody.put("products", itemsString);
-            responseBody.put("totalPages", totalPages);
-            responseBody.put("totalProducts", items.size());
-            responseBody.put("currentRangeStart", start + 1);
-            responseBody.put("currentRangeEnd", end);
-            long endTime = System.nanoTime();
-            span.setTag("completed", true);
-            getProductsHistogram.update(endTime - startTime);
-            return Response.ok(responseBody).build();
-
-        } catch (DynamoDbException e) {
-            long endTime = System.nanoTime();
-            getProductsHistogram.update(endTime - startTime);
-            LOGGER.log(Level.SEVERE, "Error while getting products ", e);
-            span.setTag("error", true);
-            throw new WebApplicationException("Error while getting products. Please try again later.", e, Response.Status.INTERNAL_SERVER_ERROR);
-        }
-        finally {
-            span.finish();
-        }
-    }
-    public Response getProductsFallback(@QueryParam("searchTerm") String searchTerm,
-                                        @QueryParam("sortBy") String sortBy,
-                                        @QueryParam("sortOrder") String sortOrder,
-                                        @QueryParam("category") String category,
-                                        @QueryParam("page") Integer page,
-                                        @QueryParam("pageSize") Integer pageSize) {
-        LOGGER.info("Fallback activated: Unable to fetch products at the moment.");
-        Map<String, String> response = new HashMap<>();
-        response.put("description", "Unable to fetch products at the moment. Please try again later.");
-        return Response.ok(response).build();
-    }
+//    @GET
+//    @Path("/all")
+//    @Counted(name = "getProductsCount", description = "Count of getProducts calls")
+//    @Timed(name = "getProductsTime", description = "Time taken to fetch products")
+//    @Metered(name = "getProductsMetered", description = "Rate of getProducts calls")
+//    @ConcurrentGauge(name = "getProductsConcurrent", description = "Concurrent getProducts calls")
+//    @Timeout(value = 3, unit = ChronoUnit.SECONDS) // Timeout after 5 seconds
+//    @Retry(maxRetries = 3) // Retry up to 3 times
+//    @Fallback(fallbackMethod = "getProductsFallback") // Fallback method if all retries fail
+//    @CircuitBreaker(requestVolumeThreshold = 4) // Use circuit breaker after 4 failed requests
+//    @Bulkhead(10) // Limit concurrent calls to 10
+//    @Traced
+//    public Response getProducts(@QueryParam("searchTerm") String searchTerm,
+//                                @QueryParam("sortBy") String sortBy,
+//                                @QueryParam("sortOrder") String sortOrder,
+//                                @QueryParam("category") String category,
+//                                @QueryParam("page") Integer page,
+//                                @QueryParam("pageSize") Integer pageSize) {
+//        long startTime = System.nanoTime();
+//        Span span = tracer.buildSpan("getProducts").start();
+//        Map<String, Object> logMap = new HashMap<>();
+//        logMap.put("searchTerm", searchTerm);
+//        logMap.put("sortBy", sortBy);
+//        logMap.put("sortOrder", sortOrder);
+//        logMap.put("category", category);
+//        logMap.put("page", page);
+//        logMap.put("pageSize", pageSize);
+//        span.log(logMap);
+//        checkAndUpdateDynamoDbClient();
+//        try {
+//            if (page == null) {
+//                page = 1;
+//            }
+//            if (pageSize == null) {
+//                pageSize = 4;
+//            }
+//            ScanRequest.Builder scanRequestBuilder = ScanRequest.builder().tableName(currentTableName);
+//            String filterExpression = "";
+//            Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
+//
+//            if (searchTerm != null && !searchTerm.isEmpty()) {
+//                filterExpression += "contains(productName, :val)";
+//                expressionAttributeValues.put(":val", AttributeValue.builder().s(searchTerm).build());
+//            }
+//
+//            if (category != null && !category.isEmpty()) {
+//                if (!filterExpression.isEmpty()) {
+//                    filterExpression += " AND ";
+//                }
+//                filterExpression += "categoryName = :cat";
+//                expressionAttributeValues.put(":cat", AttributeValue.builder().s(category).build());
+//            }
+//
+//            if (!filterExpression.isEmpty()) {
+//                scanRequestBuilder.filterExpression(filterExpression)
+//                        .expressionAttributeValues(expressionAttributeValues);
+//            }
+//
+//            ScanRequest scanRequest = scanRequestBuilder.build();
+//            ScanResponse scanResponse = dynamoDB.scan(scanRequest);
+//
+//            List<Map<String, AttributeValue>> items = scanResponse.items();
+//            List<Map<String, AttributeValue>> sortedItems = new ArrayList<>(items);
+//
+//            if (sortBy != null && !sortBy.isEmpty()) {
+//                switch (sortBy) {
+//                    case "AverageRating":
+//                        sortedItems.sort(Comparator.comparing(item -> Double.parseDouble(item.get("AverageRating").n())));
+//                        if (sortOrder != null && sortOrder.equalsIgnoreCase("DSC")) Collections.reverse(sortedItems);
+//                        items = sortedItems;
+//                        break;
+//                    case "Price":
+//                        sortedItems.sort(Comparator.comparing(item -> Double.parseDouble(item.get("Price").n())));
+//                        if (sortOrder != null && sortOrder.equalsIgnoreCase("DSC")) Collections.reverse(sortedItems);
+//                        items = sortedItems;
+//                        break;
+//                    default:
+//                        break;
+//                }
+//            }
+//
+//            int totalPages = (int) Math.ceil((double) items.size() / pageSize);
+//
+//            int start = (page - 1) * pageSize;
+//            int end = Math.min(start + pageSize, items.size());
+//            List<Map<String, AttributeValue>> pagedItems = items.subList(start, end);
+//
+//            List<Map<String, String>> itemsString = ResponseTransformer.transformItems(pagedItems);
+//            Map<String, Object> responseBody = new HashMap<>();
+//            responseBody.put("products", itemsString);
+//            responseBody.put("totalPages", totalPages);
+//            responseBody.put("totalProducts", items.size());
+//            responseBody.put("currentRangeStart", start + 1);
+//            responseBody.put("currentRangeEnd", end);
+//            long endTime = System.nanoTime();
+//            span.setTag("completed", true);
+//            getProductsHistogram.update(endTime - startTime);
+//            return Response.ok(responseBody).build();
+//
+//        } catch (DynamoDbException e) {
+//            long endTime = System.nanoTime();
+//            getProductsHistogram.update(endTime - startTime);
+//            LOGGER.log(Level.SEVERE, "Error while getting products ", e);
+//            span.setTag("error", true);
+//            throw new WebApplicationException("Error while getting products. Please try again later.", e, Response.Status.INTERNAL_SERVER_ERROR);
+//        }
+//        finally {
+//            span.finish();
+//        }
+//    }
+//    public Response getProductsFallback(@QueryParam("searchTerm") String searchTerm,
+//                                        @QueryParam("sortBy") String sortBy,
+//                                        @QueryParam("sortOrder") String sortOrder,
+//                                        @QueryParam("category") String category,
+//                                        @QueryParam("page") Integer page,
+//                                        @QueryParam("pageSize") Integer pageSize) {
+//        LOGGER.info("Fallback activated: Unable to fetch products at the moment.");
+//        Map<String, String> response = new HashMap<>();
+//        response.put("description", "Unable to fetch products at the moment. Please try again later.");
+//        return Response.ok(response).build();
+//    }
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)

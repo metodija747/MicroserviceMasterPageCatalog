@@ -10,27 +10,34 @@ kumuluzee:
       exposed-headers: ""
       supports-credentials: true
       max-age: 3600
-  logs:
-    config-file:
-        '<?xml version="1.0" encoding="UTF-8"?>
-         <Configuration name="tutorial-logging">
-             <Appenders>
-                 <Console name="console" target="SYSTEM_OUT">
-                     <PatternLayout pattern="%d %p %marker %m %X %ex %n"/>
-                 </Console>
-                   <!-- A socket definition for sending logs into Logstash using TCP and JSON format.-->
-                   <!--<Socket name="logstash" host="192.168.99.100" port="5043" protocol="tcp">
-                      <JSONLayout complete="false" compact="true" eventEol="true" charset="UTF-8" properties="true"/>
-                   </Socket>-->
-          </Appenders>
-          <Loggers>
-          <!-- Default logger -->
-          <Root level="trace">
-          <AppenderRef ref="console"/>
-          <AppenderRef ref="logstash"/>
-          </Root>
-          </Loggers>
-          </Configuration>'
+  openapi-mp:
+    extension: true
+    version: "3.0.1"
+    servlet:
+      mapping: /api-specs/*
+    ui:
+      enabled: true
+      mapping: /api-specs/ui
+      specification-server: http://localhost:8080/api-specs
+      server-auto-config:
+        enabled: true
+        original-uri-check: false
+#  logs:
+#    config-file:
+#        '<?xml version="1.0" encoding="UTF-8"?>
+#         <Configuration name="tutorial-logging">
+#             <Appenders>
+#                 <Console name="console" target="SYSTEM_OUT">
+#                     <PatternLayout pattern="%d %p %marker %m %X %ex %n"/>
+#                 </Console>
+#          </Appenders>
+#          <Loggers>
+#          <!-- Default logger -->
+#          <Root level="trace">
+#          <AppenderRef ref="console"/>
+#          </Root>
+#          </Loggers>
+#          </Configuration>'
   name: catalog-service
   version: 1.0.0
   env:
@@ -47,30 +54,27 @@ kumuluzee:
 #    etcd:
 #      hosts: http://etcd-client:2379
   health:
-    logs:
-      enabled: true
-      type: both
-      level: FINE
-      period-s: 60
+#    logs:
+#      enabled: true
+#      type: both
+#      level: FINE
+#      period-s: 60
     checks:
       disk-space-health-check:
         threshold: 100000000
-      etcd-health-check:
-        connection-url: http://etcd-client:2379/health
+#      etcd-health-check:
+#        connection-url: http://etcd-client:2379/health
       http-health-check:
         connection-url: https://github.com/metodija747/MicroserviceMasterProductCatalog.git
   metrics:
-    logs:
-      period-s: 60
-      level: INFO
     servlet:
       enabled: true
       mapping: /metrics
-      logstash:
-        enabled: true
-        address: https://458a0729e5154bb7b46d58fa98fe93e1.us-central1.gcp.cloud.es.io/
-        port: 5044
-        period-s: 15
+    logstash:
+      enabled: true
+      address: http://172.23.249.222:31046
+      port: 5043
+      period-s: 60
   jwt-auth:
     jwks-uri: https://cognito-idp.us-east-1.amazonaws.com/us-east-1_cl8iVMzUw/.well-known/jwks.json
     issuer: https://cognito-idp.us-east-1.amazonaws.com/us-east-1_cl8iVMzUw
