@@ -22,22 +22,24 @@ kumuluzee:
 #      server-auto-config:
 #        enabled: true
 #        original-uri-check: false
-#  logs:
-#    config-file:
-#        '<?xml version="1.0" encoding="UTF-8"?>
-#         <Configuration name="tutorial-logging">
-#             <Appenders>
-#                 <Console name="console" target="SYSTEM_OUT">
-#                     <PatternLayout pattern="%d %p %marker %m %X %ex %n"/>
-#                 </Console>
-#          </Appenders>
-#          <Loggers>
-#          <!-- Default logger -->
-#          <Root level="trace">
-#          <AppenderRef ref="console"/>
-#          </Root>
-#          </Loggers>
-#          </Configuration>'
+  logs:
+    config-file:
+        '<?xml version="1.0" encoding="UTF-8"?>
+         <Configuration name="tutorial-logging">
+        <Appenders>
+          <!-- Existing Console Appender -->
+          <Socket name="logstash" host="logstash-service" port="5000">
+            <JsonLayout compact="true" eventEol="true" />
+          </Socket>
+            </Appenders>
+        <Loggers>
+          <!-- Default logger -->
+          <Root level="trace">
+            <AppenderRef ref="console"/>
+            <AppenderRef ref="logstash"/>
+          </Root>
+        </Loggers>
+          </Configuration>'
   name: catalog-service
   version: 1.0.0
   env:
