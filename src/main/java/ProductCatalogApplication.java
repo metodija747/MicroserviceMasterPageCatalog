@@ -14,12 +14,7 @@ import java.util.logging.Logger;
 @ApplicationPath("/")
 @LoginConfig(authMethod = "MP-JWT")
 @RegisterService
-//@SecurityScheme(securitySchemeName = "openid-connect", type = SecuritySchemeType.OPENIDCONNECT,
-//        openIdConnectUrl = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_cl8iVMzUw/.well-known/openid-configuration")
-//@OpenAPIDefinition(
-//        info = @Info(title = "Product Catalog API", version = "1.0.0"),
-//        servers = @Server(url = "http://localhost:8080"),
-//        security = @SecurityRequirement(name = "openid-connect"))
+@OpenAPIDefinition(info = @Info(title = "Product Catalog API", version = "1.0.0"))
 public class ProductCatalogApplication extends Application {
     private static final Logger LOG = Logger.getLogger(ProductCatalogApplication.class.getName());
     public ProductCatalogApplication() {

@@ -5,12 +5,14 @@ metadata:
 data:
   logstash.yml: |
     input {
-      tcp {
-        port => 5000
+      udp {
+        port => 5043
       }
     }
     output {
       elasticsearch {
-        hosts => ["elasticsearch-master:9200"]
+        hosts => ["https://mastermicroservice-4c000c.es.us-central1.gcp.cloud.es.io:9200"]
+        user => "elastic"
+        password => "JIyTL9ptLZ3fWXAAqbJHiXnt"
       }
     }

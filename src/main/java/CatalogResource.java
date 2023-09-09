@@ -17,9 +17,11 @@ import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.eclipse.microprofile.metrics.Histogram;
 import org.eclipse.microprofile.metrics.annotation.*;
 import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.enums.ParameterIn;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
+import org.eclipse.microprofile.openapi.annotations.parameters.Parameters;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.opentracing.Traced;
@@ -33,7 +35,7 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@Path("/products")
+@Path("products")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @RequestScoped
@@ -86,69 +88,21 @@ public class CatalogResource {
         currentTableName = configProperties.getTableName();
     }
 
-//    @GET
-//    @Operation(summary = "Get product by ID", description = "Fetches the details of a specific product by its ID.")
-//    @APIResponse(
-//            description = "Either the details of the retrieved product or an error message. For example, an error response could be: { 'description': 'Unable to fetch product at the moment. Please try again later.' }",
-//            responseCode = "200",
-//            content = @Content(schema = @Schema(implementation = Product.class))
-//    )
-    @Path("/{productId}")
-    @Counted(name = "getProductCount", description = "Count of getProduct calls")
-    @Timed(name = "getProductTime", description = "Time taken to fetch a product")
-    @Metered(name = "getProductMetered", description = "Rate of getProduct calls")
-    @ConcurrentGauge(name = "getProductConcurrent", description = "Concurrent getProduct calls")
-    @Timeout(value = 20, unit = ChronoUnit.SECONDS) // Timeout after 20 seconds
-    @Retry(maxRetries = 3) // Retry up to 3 times
-    @Fallback(fallbackMethod = "getProductFallback") // Fallback method if all retries fail
-    @CircuitBreaker(requestVolumeThreshold = 4) // Use circuit breaker after 4 failed requests
-    @Bulkhead(5) // Limit concurrent calls to 5
-    @Traced
-    public Response getProduct(
-            @Parameter(description = "Unique identifier for the product", required = true, example = "a9abe32e-9bd6-43aa-bc00-9044a27b858b2")
-            @PathParam("productId") String productId) {
-        Span span = tracer.buildSpan("getProduct").start();
-        span.setTag("productId", productId);
-        Map<String, Object> logMap = new HashMap<>();
-        logMap.put("event", "getProduct");
-        logMap.put("value", productId);
-        span.log(logMap);
-        LOGGER.info("getProduct method called");
-        checkAndUpdateDynamoDbClient();
-
-        Map<String, AttributeValue> key = new HashMap<>();
-        key.put("productId", AttributeValue.builder().s(productId).build());
-        GetItemRequest request;
-
-        try {
-            request = GetItemRequest.builder()
-                    .key(key)
-                    .tableName(currentTableName)
-                    .build();
-            GetItemResponse getItemResponse = dynamoDB.getItem(request);
-            Map<String, AttributeValue> item = getItemResponse.item();
-            Map<String, String> transformedItem = ResponseTransformer.transformItem(item);
-            span.setTag("completed", true);
-            return Response.ok(transformedItem).build();
-        } catch (DynamoDbException e) {
-            LOGGER.log(Level.SEVERE, "Error while getting product " + productId, e);
-            span.setTag("error", true);
-            throw new WebApplicationException("Error while getting product. Please try again later.", e, Response.Status.INTERNAL_SERVER_ERROR);
-        }
-        finally {
-        span.finish();
-        }
-    }
-
-//    @Operation(summary = "Fallback for getProduct", description = "Returns a default response when getProduct fails.")
-    public Response getProductFallback(@PathParam("productId") String productId) {
-        LOGGER.info("Fallback activated: Unable to fetch product at the moment for productId: " + productId);
-        Map<String, String> response = new HashMap<>();
-        response.put("description", "Unable to fetch product at the moment. Please try again later.");
-        return Response.ok(response).build();
-    }
 
     @GET
+    @Operation(summary = "Get Products", description = "This endpoint allows users to get a list of products.")
+    @Parameters({
+            @Parameter(name = "searchTerm", description = "Search term for filtering products", in = ParameterIn.QUERY),
+            @Parameter(name = "sortBy", description = "Field to sort by", in = ParameterIn.QUERY),
+            @Parameter(name = "sortOrder", description = "Sort order", in = ParameterIn.QUERY),
+            @Parameter(name = "category", description = "Category for filtering products", in = ParameterIn.QUERY),
+            @Parameter(name = "page", description = "Page number", in = ParameterIn.QUERY),
+            @Parameter(name = "pageSize", description = "Page size", in = ParameterIn.QUERY)
+    })
+    @APIResponses({
+            @APIResponse(responseCode = "200", description = "Successfully obtained products list."),
+            @APIResponse(responseCode = "500", description = "Internal Server Error.")
+    })
     @Counted(name = "getProductsCount", description = "Count of getProducts calls")
     @Timed(name = "getProductsTime", description = "Time taken to fetch products")
     @Metered(name = "getProductsMetered", description = "Rate of getProducts calls")
@@ -266,6 +220,69 @@ public class CatalogResource {
         LOGGER.info("Fallback activated: Unable to fetch products at the moment.");
         Map<String, String> response = new HashMap<>();
         response.put("description", "Unable to fetch products at the moment. Please try again later.");
+        return Response.ok(response).build();
+    }
+
+
+    @GET
+    @Operation(summary = "Get Product Details", description = "This endpoint allows users to get details of a specific product in the catalog by its productId.")
+    @Parameters({
+            @Parameter(description = "Unique identifier for the product", required = true, example = "a9abe32e-9bd6-43aa-bc00-9044a27b858b")
+    })
+    @APIResponses({
+            @APIResponse(responseCode = "200", description = "Successfully obtained product details.", content = @Content(schema = @Schema(implementation = Product.class))),
+            @APIResponse(responseCode = "500", description = "Internal Server Error.")
+    })
+    @Path("{productId}")
+    @Counted(name = "getProductCount", description = "Count of getProduct calls")
+    @Timed(name = "getProductTime", description = "Time taken to fetch a product")
+    @Metered(name = "getProductMetered", description = "Rate of getProduct calls")
+    @ConcurrentGauge(name = "getProductConcurrent", description = "Concurrent getProduct calls")
+    @Timeout(value = 20, unit = ChronoUnit.SECONDS) // Timeout after 20 seconds
+    @Retry(maxRetries = 3) // Retry up to 3 times
+    @Fallback(fallbackMethod = "getProductFallback") // Fallback method if all retries fail
+    @CircuitBreaker(requestVolumeThreshold = 4) // Use circuit breaker after 4 failed requests
+    @Bulkhead(5) // Limit concurrent calls to 5
+    @Traced
+    public Response getProduct(
+            @PathParam("productId") String productId) {
+        Span span = tracer.buildSpan("getProduct").start();
+        span.setTag("productId", productId);
+        Map<String, Object> logMap = new HashMap<>();
+        logMap.put("event", "getProduct");
+        logMap.put("value", productId);
+        span.log(logMap);
+        LOGGER.info("getProduct method called");
+        checkAndUpdateDynamoDbClient();
+
+        Map<String, AttributeValue> key = new HashMap<>();
+        key.put("productId", AttributeValue.builder().s(productId).build());
+        GetItemRequest request;
+
+        try {
+            request = GetItemRequest.builder()
+                    .key(key)
+                    .tableName(currentTableName)
+                    .build();
+            GetItemResponse getItemResponse = dynamoDB.getItem(request);
+            Map<String, AttributeValue> item = getItemResponse.item();
+            Map<String, String> transformedItem = ResponseTransformer.transformItem(item);
+            span.setTag("completed", true);
+            return Response.ok(transformedItem).build();
+        } catch (DynamoDbException e) {
+            LOGGER.log(Level.SEVERE, "Error while getting product " + productId, e);
+            span.setTag("error", true);
+            throw new WebApplicationException("Error while getting product. Please try again later.", e, Response.Status.INTERNAL_SERVER_ERROR);
+        }
+        finally {
+        span.finish();
+        }
+    }
+
+    public Response getProductFallback(@PathParam("productId") String productId) {
+        LOGGER.info("Fallback activated: Unable to fetch product at the moment for productId: " + productId);
+        Map<String, String> response = new HashMap<>();
+        response.put("description", "Unable to fetch product at the moment. Please try again later.");
         return Response.ok(response).build();
     }
 

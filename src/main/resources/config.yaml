@@ -10,36 +10,36 @@ kumuluzee:
       exposed-headers: ""
       supports-credentials: true
       max-age: 3600
-#  openapi-mp:
-#    extension: true
-#    version: "3.0.1"
-#    servlet:
-#      mapping: /api-specs/*
-#    ui:
-#      enabled: true
-#      mapping: /api-specs/ui
-#      specification-server: http://localhost:8080/api-specs
-#      server-auto-config:
-#        enabled: true
-#        original-uri-check: false
+  openapi-mp:
+    extension: true
+    version: "3.0.1"
+    servlet:
+      mapping: /api-specs/*
+    ui:
+      enabled: true
+      mapping: /api-specs/ui
+      specification-server: http://localhost:8080/api-specs
+      server-auto-config:
+        enabled: true
+        original-uri-check: false
   logs:
     config-file:
         '<?xml version="1.0" encoding="UTF-8"?>
          <Configuration name="tutorial-logging">
-        <Appenders>
-          <!-- Existing Console Appender -->
-          <Socket name="logstash" host="logstash-service" port="5000">
-            <JsonLayout compact="true" eventEol="true" />
-          </Socket>
-            </Appenders>
-        <Loggers>
-          <!-- Default logger -->
-          <Root level="trace">
-            <AppenderRef ref="console"/>
-            <AppenderRef ref="logstash"/>
-          </Root>
-        </Loggers>
-          </Configuration>'
+           <Appenders>
+             <!-- Existing Console Appender -->
+             <Socket name="logstash" protocol="udp" host="logstash-service" port="5043">
+               <JsonLayout compact="true" eventEol="true" />
+             </Socket>
+           </Appenders>
+           <Loggers>
+             <!-- Default logger -->
+             <Root level="trace">
+               <AppenderRef ref="console"/>
+               <AppenderRef ref="logstash"/>
+             </Root>
+           </Loggers>
+         </Configuration>'
   name: catalog-service
   version: 1.0.0
   env:
@@ -72,11 +72,11 @@ kumuluzee:
     servlet:
       enabled: true
       mapping: /metrics
-    logstash:
-      enabled: true
-      address: http://172.23.249.222:31046
-      port: 5043
-      period-s: 60
+#    logstash:
+#      enabled: true
+#      address: udp://logstash-logstash:5043
+#      port: 5043
+#      period-s: 60
   jwt-auth:
     jwks-uri: https://cognito-idp.us-east-1.amazonaws.com/us-east-1_cl8iVMzUw/.well-known/jwks.json
     issuer: https://cognito-idp.us-east-1.amazonaws.com/us-east-1_cl8iVMzUw
