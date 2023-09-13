@@ -18,7 +18,7 @@ kumuluzee:
     ui:
       enabled: true
       mapping: /api-specs/ui
-      specification-server: http://20.231.233.217/product/api-specs
+      specification-server: http://20.231.233.217/product/
       server-auto-config:
         enabled: true
         original-uri-check: false
