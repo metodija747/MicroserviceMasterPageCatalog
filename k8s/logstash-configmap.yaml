@@ -5,14 +5,12 @@ metadata:
 data:
   logstash.conf: |
     input {
-      udp {
+      tcp {
         port => 5043
       }
     }
     output {
-      elasticsearch {
-        ssl => true
-        cloud_id => "MasterMicroservice:dXMtY2VudHJhbDEuZ2NwLmNsb3VkLmVzLmlvOjQ0MyRlMGI3YWE4NjJlMTc0N2YyOTcyNGViZjBjZjQwOTQ4NyQ2ODNiYjczYzE2MGE0MWQ2OGIyMjE1MzUwM2VhNWU4MA=="
-        cloud_auth => "elastic:JIyTL9ptLZ3fWXAAqbJHiXnt"
+    elasticsearch {
+    hosts => ["http://elasticsearch-service:9200"]
       }
     }

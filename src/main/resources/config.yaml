@@ -28,7 +28,7 @@ kumuluzee:
          <Configuration name="tutorial-logging">
            <Appenders>
              <!-- Existing Console Appender -->
-             <Socket name="logstash" protocol="udp" host="logstash-service" port="5043">
+             <Socket name="logstash" protocol="tcp" host="logstash-service" port="5043">
                <JsonLayout compact="true" eventEol="true" />
              </Socket>
            </Appenders>
@@ -71,7 +71,7 @@ kumuluzee:
   metrics:
     servlet:
       enabled: true
-      mapping: /metrics
+      mapping: /products/metrics
 #    logstash:
 #      enabled: true
 #      address: udp://logstash-logstash:5043

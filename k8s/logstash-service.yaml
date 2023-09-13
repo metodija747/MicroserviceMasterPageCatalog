@@ -6,7 +6,7 @@ spec:
   selector:
     app: logstash
   ports:
-    - protocol: UDP
+    - protocol: TCP
       port: 5043
       targetPort: 5043
-
+  type: LoadBalancer
