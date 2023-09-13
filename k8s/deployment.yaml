@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: catalog-microservice
-  annotations:   # <-- Add Prometheus annotations here
+  annotations:   # <--  Add Prometheus annotations here
     prometheus.io/scrape: 'true'
     prometheus.io/path: '/products/metrics'
     prometheus.io/port: '8080'
