@@ -14,13 +14,14 @@ spec:
     spec:
       containers:
         - name: logstash
-          image: docker.elastic.co/logstash/logstash:7.14.0
+          image: docker.elastic.co/logstash/logstash:8.9.2
           ports:
-            - containerPort: 5043
+            - containerPort: 5043  # Optional, expose the port Logstash will listen on
           volumeMounts:
             - name: logstash-config-volume
-              mountPath: /usr/share/logstash/config
+              mountPath: /usr/share/logstash/pipeline/logstash.conf
+              subPath: logstash.conf  # Make sure this matches the key in your ConfigMap
       volumes:
         - name: logstash-config-volume
           configMap:
-            name: logstash-configmap
+            name: logstash-configmap  # Make sure this matches the name of your ConfigMap

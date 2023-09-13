@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   name: logstash-configmap
 data:
-  logstash.yml: |
+  logstash.conf: |
     input {
       udp {
         port => 5043
@@ -11,8 +11,8 @@ data:
     }
     output {
       elasticsearch {
-        hosts => ["https://mastermicroservice-4c000c.es.us-central1.gcp.cloud.es.io:9200"]
-        user => "elastic"
-        password => "JIyTL9ptLZ3fWXAAqbJHiXnt"
+        ssl => true
+        cloud_id => "MasterMicroservice:dXMtY2VudHJhbDEuZ2NwLmNsb3VkLmVzLmlvOjQ0MyRlMGI3YWE4NjJlMTc0N2YyOTcyNGViZjBjZjQwOTQ4NyQ2ODNiYjczYzE2MGE0MWQ2OGIyMjE1MzUwM2VhNWU4MA=="
+        cloud_auth => "elastic:JIyTL9ptLZ3fWXAAqbJHiXnt"
       }
     }
