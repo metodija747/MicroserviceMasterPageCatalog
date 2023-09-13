@@ -14,10 +14,10 @@ kumuluzee:
     extension: true
     version: "3.0.1"
     servlet:
-      mapping: /api-specs/*
+      mapping: /products/api-specs/*
     ui:
       enabled: true
-      mapping: /api-specs/ui
+      mapping: /products/api-specs/ui
       specification-server: http://20.231.233.217/products/api-specs
       server-auto-config:
         enabled: true
