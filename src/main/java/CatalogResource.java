@@ -38,7 +38,7 @@ import java.util.logging.Logger;
 @SecurityRequirement(name = "jwtAuth")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-//@RequestScoped
+@RequestScoped
 @Log(LogParams.METRICS)
 public class CatalogResource {
 
