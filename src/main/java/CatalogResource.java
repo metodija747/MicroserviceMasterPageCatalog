@@ -4,7 +4,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import com.kumuluz.ee.discovery.annotations.DiscoverService;
 import com.kumuluz.ee.logs.cdi.Log;
 import com.kumuluz.ee.logs.cdi.LogParams;
 import io.opentracing.Span;
@@ -12,7 +11,6 @@ import io.opentracing.Tracer;
 import org.eclipse.microprofile.faulttolerance.*;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.jwt.ClaimValue;
-import org.eclipse.microprofile.jwt.Claims;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.eclipse.microprofile.metrics.Histogram;
 import org.eclipse.microprofile.metrics.annotation.*;
@@ -22,23 +20,25 @@ import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.parameters.Parameters;
+import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
+import org.eclipse.microprofile.openapi.annotations.security.SecurityRequirement;
 import org.eclipse.microprofile.opentracing.Traced;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
 
-import java.net.URL;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Path("products")
+@SecurityRequirement(name = "jwtAuth")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-@RequestScoped
+//@RequestScoped
 @Log(LogParams.METRICS)
 public class CatalogResource {
 
@@ -54,14 +54,6 @@ public class CatalogResource {
 
     @Inject
     private JsonWebToken jwt;
-
-//    @Inject
-//    @DiscoverService(value = "comment-service", environment = "dev", version = "1.0.0")
-//    private Optional<URL> productCommentsUrl;
-//
-//    @Inject
-//    @DiscoverService(value = "cart-service", environment = "dev", version = "1.0.0")
-//    private Optional<URL> cartServiceUrl;
 
     private DynamoDbClient dynamoDB;
     private static final Logger LOGGER = Logger.getLogger(CatalogResource.class.getName());
@@ -107,11 +99,11 @@ public class CatalogResource {
     @Timed(name = "getProductsTime", description = "Time taken to fetch products")
     @Metered(name = "getProductsMetered", description = "Rate of getProducts calls")
     @ConcurrentGauge(name = "getProductsConcurrent", description = "Concurrent getProducts calls")
-    @Timeout(value = 3, unit = ChronoUnit.SECONDS) // Timeout after 5 seconds
+    @Timeout(value = 50, unit = ChronoUnit.SECONDS) // Timeout after 50 seconds
     @Retry(maxRetries = 3) // Retry up to 3 times
     @Fallback(fallbackMethod = "getProductsFallback") // Fallback method if all retries fail
-    @CircuitBreaker(requestVolumeThreshold = 4) // Use circuit breaker after 4 failed requests
-    @Bulkhead(10) // Limit concurrent calls to 10
+    @CircuitBreaker(requestVolumeThreshold = 4, failureRatio = 0.5, delay = 2000)
+    @Bulkhead(100) // Limit concurrent calls to 10
     @Traced
     public Response getProducts(@QueryParam("searchTerm") String searchTerm,
                                 @QueryParam("sortBy") String sortBy,
@@ -195,19 +187,21 @@ public class CatalogResource {
             responseBody.put("totalProducts", items.size());
             responseBody.put("currentRangeStart", start + 1);
             responseBody.put("currentRangeEnd", end);
+
             long endTime = System.nanoTime();
             span.setTag("completed", true);
             getProductsHistogram.update(endTime - startTime);
+            LOGGER.info("Successfully obtained product list");
             return Response.ok(responseBody).build();
 
-        } catch (DynamoDbException e) {
+        } catch (Exception e) {
             long endTime = System.nanoTime();
             getProductsHistogram.update(endTime - startTime);
-            LOGGER.log(Level.SEVERE, "Error while getting products ", e);
+            LOGGER.log(Level.SEVERE, "Failed to obtain product list", e);
             span.setTag("error", true);
-            throw new WebApplicationException("Error while getting products. Please try again later.", e, Response.Status.INTERNAL_SERVER_ERROR);
-        }
-        finally {
+            span.finish();
+            throw new WebApplicationException("Failed to obtain product list", e, Response.Status.INTERNAL_SERVER_ERROR);
+        } finally {
             span.finish();
         }
     }
@@ -218,9 +212,14 @@ public class CatalogResource {
                                         @QueryParam("page") Integer page,
                                         @QueryParam("pageSize") Integer pageSize) {
         LOGGER.info("Fallback activated: Unable to fetch products at the moment.");
-        Map<String, String> response = new HashMap<>();
-        response.put("description", "Unable to fetch products at the moment. Please try again later.");
-        return Response.ok(response).build();
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("statusCode", 500);
+        Map<String, String> description = new HashMap<>();
+        description.put("description", "Unable to fetch products at the moment. Please try again later.");
+        response.put("body", description);
+
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(response).build();
     }
 
 
@@ -230,7 +229,8 @@ public class CatalogResource {
             @Parameter(description = "Unique identifier for the product", required = true, example = "a9abe32e-9bd6-43aa-bc00-9044a27b858b")
     })
     @APIResponses({
-            @APIResponse(responseCode = "200", description = "Successfully obtained product details.", content = @Content(schema = @Schema(implementation = Product.class))),
+            @APIResponse(responseCode = "200", description = "Successfully obtained product details."),
+            @APIResponse(responseCode = "404", description = "Product not found."),
             @APIResponse(responseCode = "500", description = "Internal Server Error.")
     })
     @Path("{productId}")
@@ -238,11 +238,11 @@ public class CatalogResource {
     @Timed(name = "getProductTime", description = "Time taken to fetch a product")
     @Metered(name = "getProductMetered", description = "Rate of getProduct calls")
     @ConcurrentGauge(name = "getProductConcurrent", description = "Concurrent getProduct calls")
-    @Timeout(value = 20, unit = ChronoUnit.SECONDS) // Timeout after 20 seconds
+    @Timeout(value = 50, unit = ChronoUnit.SECONDS) // Timeout after 50 seconds
     @Retry(maxRetries = 3) // Retry up to 3 times
     @Fallback(fallbackMethod = "getProductFallback") // Fallback method if all retries fail
-    @CircuitBreaker(requestVolumeThreshold = 4) // Use circuit breaker after 4 failed requests
-    @Bulkhead(5) // Limit concurrent calls to 5
+    @CircuitBreaker(requestVolumeThreshold = 4, failureRatio = 0.5, delay = 2000)
+    @Bulkhead(100) // Limit concurrent calls to 5
     @Traced
     public Response getProduct(
             @PathParam("productId") String productId) {
@@ -264,43 +264,67 @@ public class CatalogResource {
                     .key(key)
                     .tableName(currentTableName)
                     .build();
+
             GetItemResponse getItemResponse = dynamoDB.getItem(request);
             Map<String, AttributeValue> item = getItemResponse.item();
+            // Check if the product exists
+            if (item == null || item.isEmpty()) {
+                LOGGER.log(Level.WARNING, "Product not found");
+                span.setTag("error", true);
+                return Response.status(Response.Status.NOT_FOUND).entity("Product not found").build();
+            }
             Map<String, String> transformedItem = ResponseTransformer.transformItem(item);
             span.setTag("completed", true);
+            LOGGER.log(Level.INFO, "Successfully obtained product details");
             return Response.ok(transformedItem).build();
         } catch (DynamoDbException e) {
-            LOGGER.log(Level.SEVERE, "Error while getting product " + productId, e);
+            LOGGER.log(Level.SEVERE, "Failed to obtain product details", e);
             span.setTag("error", true);
-            throw new WebApplicationException("Error while getting product. Please try again later.", e, Response.Status.INTERNAL_SERVER_ERROR);
-        }
-        finally {
-        span.finish();
+            throw new WebApplicationException("Failed to obtain product details", e, Response.Status.INTERNAL_SERVER_ERROR);
+        } finally {
+            span.finish();
         }
     }
 
     public Response getProductFallback(@PathParam("productId") String productId) {
-        LOGGER.info("Fallback activated: Unable to fetch product at the moment for productId: " + productId);
-        Map<String, String> response = new HashMap<>();
-        response.put("description", "Unable to fetch product at the moment. Please try again later.");
-        return Response.ok(response).build();
+        LOGGER.log(Level.INFO, "Fallback activated: Unable to fetch product at the moment for productId: " + productId);
+        Map<String, String> responseMap = new HashMap<>();
+        responseMap.put("description", "Unable to fetch product at the moment. Please try again later.");
+        return Response.status(500)
+                .entity(responseMap)
+                .build();
     }
 
     @POST
+    @Operation(summary = "Add a new product", description = "This endpoint allows admins to add a new product to the product catalog.")
+    @RequestBody(description = "Product object that needs to be added", required = true, content = @Content(schema = @Schema(implementation = Product.class)))
+    @APIResponses({
+            @APIResponse(responseCode = "200", description = "Product successfully added."),
+            @APIResponse(responseCode = "401", description = "Unauthorized: Invalid token."),
+            @APIResponse(responseCode = "403", description = "Forbidden: only admins can add/update products."),
+            @APIResponse(responseCode = "500", description = "Internal Server Error.")
+    })
     @Consumes(MediaType.APPLICATION_JSON)
     @Counted(name = "addProductCount", description = "Count of addProduct calls")
     @Timed(name = "addProductTime", description = "Time taken to add a product")
     @Metered(name = "addProductMetered", description = "Rate of addProduct calls")
     @ConcurrentGauge(name = "addProductConcurrent", description = "Concurrent addProduct calls")
-    @Timeout(value = 20, unit = ChronoUnit.SECONDS) // Timeout after 2 seconds
+    @Timeout(value = 50, unit = ChronoUnit.SECONDS) // Timeout after 50 seconds
     @Retry(maxRetries = 3) // Retry up to 3 times
     @Fallback(fallbackMethod = "addProductFallback") // Fallback method if all retries fail
-    @CircuitBreaker(requestVolumeThreshold = 4) // Use circuit breaker after 4 failed requests
-    @Bulkhead(5) // Limit concurrent calls to 5
+    @CircuitBreaker(requestVolumeThreshold = 4, failureRatio = 0.5, delay = 2000)
+    @Bulkhead(100) // Limit concurrent calls to 100
     @Traced
     public Response addProduct(Product product) {
-        if (jwt == null || !groups.getValue().contains("Admins")) {
-            return Response.ok("Unauthorized: only admins can add/update products.").build();
+        if (jwt == null) {
+            LOGGER.log(Level.SEVERE, "Token verification failed");
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity("Invalid token.")
+                    .build();
+        }
+        if (!groups.getValue().contains("Admins")) {
+            LOGGER.log(Level.SEVERE, "Token verification failed");
+            return Response.status(Response.Status.FORBIDDEN).entity("Unauthorized: only admins can add/update products.").build();
         }
         Span span = tracer.buildSpan("addProduct").start();
         span.setTag("productId", product.getProductId());
@@ -323,6 +347,7 @@ public class CatalogResource {
             item.put("Price", AttributeValue.builder().n(Double.toString(product.getPrice())).build());
             item.put("productName", AttributeValue.builder().s(product.getProductName()).build());
             item.put("Description", AttributeValue.builder().s(product.getDescription()).build());
+            item.put("beautifulComment", AttributeValue.builder().s(product.getBeautifulComment()).build());
             item.put("commentsCount", AttributeValue.builder().n(Integer.toString(product.getCommentsCount())).build());
             item.put("discountPrice", AttributeValue.builder().n(Double.toString(product.getDiscountPrice())).build());
 
@@ -332,11 +357,15 @@ public class CatalogResource {
                     .build();
             dynamoDB.putItem(putItemRequest);
             span.setTag("completed", true);
-            return Response.status(Response.Status.CREATED).entity("Product added successfully").build();
+            LOGGER.info("Product added successfully.");
+
+            Map<String, String> responseBody = new HashMap<>();
+            responseBody.put("message", "Product added successfully");
+            return Response.status(Response.Status.OK).entity(responseBody).build();
         } catch (DynamoDbException e) {
             LOGGER.log(Level.SEVERE, "Error while creating/updating product " + product.getProductId(), e);
             span.setTag("error", true);
-            throw new WebApplicationException("Error while creating/updating product. Please try again later.", e, Response.Status.INTERNAL_SERVER_ERROR);
+            throw new RuntimeException("Failed to add product", e);
         }
         finally {
         span.finish();
@@ -344,31 +373,41 @@ public class CatalogResource {
     }
     public Response addProductFallback(Product product) {
         LOGGER.info("Fallback activated: Unable to add/update product at the moment for product name: " + product.getProductName());
-        Map<String, String> response = new HashMap<>();
-        response.put("description", "Unable to add/update product at the moment. Please try again later.");
-        return Response.ok(response).build();
+        Map<String, String> responseBody = new HashMap<>();
+        responseBody.put("description", "Unable to add/update product at the moment. Please try again later.");
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(responseBody).build();
     }
 
-
     @PUT
+    @Operation(summary = "Update product rating and number of comments", description = "Updates the average rating and comment count for a specific product")
+    @APIResponses({
+            @APIResponse(responseCode = "200", description = "Successful update"),
+            @APIResponse(responseCode = "401", description = "Unauthorized"),
+            @APIResponse(responseCode = "500", description = "Internal server error")
+    })
+    @Parameter(name = "productId", in = ParameterIn.PATH, description = "Product ID")
+    @Parameter(name = "avgRating", in = ParameterIn.QUERY, description = "Average rating to update")
+    @Parameter(name = "action", in = ParameterIn.QUERY, description = "Action to perform on comment count")
     @Path("/{productId}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Counted(name = "updateProductRatingCount", description = "Count of updateProductRating calls")
     @Timed(name = "updateProductRatingTime", description = "Time taken to update a product rating")
     @Metered(name = "updateProductRatingMetered", description = "Rate of updateProductRating calls")
     @ConcurrentGauge(name = "updateProductRatingConcurrent", description = "Concurrent updateProductRating calls")
-    @Timeout(value = 20, unit = ChronoUnit.SECONDS) // Timeout after 20 seconds
+    @Timeout(value = 50, unit = ChronoUnit.SECONDS) // Timeout after 50 seconds
     @Retry(maxRetries = 3) // Retry up to 3 times
     @Fallback(fallbackMethod = "updateProductRatingFallback") // Fallback method if all retries fail
-    @CircuitBreaker(requestVolumeThreshold = 4) // Use circuit breaker after 4 failed requests
-    @Bulkhead(5) // Limit concurrent calls to 5
+    @CircuitBreaker(requestVolumeThreshold = 4, failureRatio = 0.5, delay = 2000)
+    @Bulkhead(100) // Limit concurrent calls to 100
     @Traced
     public Response updateProductRating(@PathParam("productId") String productId,
                                         double avgRating,
                                         @QueryParam("action") String action) {
         if (jwt == null) {
-            LOGGER.info("Unauthorized: only authenticated users can add/update rating to product.");
-            return Response.ok("Unauthorized: only authenticated users can add/update rating to product.").build();
+            LOGGER.log(Level.SEVERE, "Token verification failed");
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity("Invalid token.")
+                    .build();
         }
         Span span = tracer.buildSpan("updateProductRating").start();
         span.setTag("productId", productId);
@@ -410,45 +449,58 @@ public class CatalogResource {
                         .build();
             dynamoDB.updateItem(updateItemRequest);
             span.setTag("completed", true);
-            return Response.ok("Product rating and comment count updated successfully").build();
-            } catch (DynamoDbException e) {
-                LOGGER.log(Level.SEVERE, "Error while updating product rating and comment count " + productId, e);
-                span.setTag("error", true);
-                throw new WebApplicationException("Error while updating product rating and comment count. Please try again later.", e, Response.Status.INTERNAL_SERVER_ERROR);
-            }
-        finally {
+            Map<String, Object> responseBody = new HashMap<>();
+            responseBody.put("message", "Product rating and comment count updated successfully");
+            responseBody.put("averageRating", avgRating);
+            LOGGER.log(Level.INFO, "Product rating and comment count updated successfully");
+            return Response.ok(responseBody).build();
+        } catch (DynamoDbException e) {
+            LOGGER.log(Level.SEVERE, "Error while updating product rating and comment count " + productId, e);
+            span.setTag("error", true);
+            throw new WebApplicationException("Error while updating product rating and comment count. Please try again later.", e, Response.Status.INTERNAL_SERVER_ERROR);
+        } finally {
             span.finish();
         }
     }
     public Response updateProductRatingFallback(@PathParam("productId") String productId,
                                                 double avgRating,
                                                 @QueryParam("action") String action) {
-        LOGGER.info("Fallback activated: Unable to update product rating and comment count at the moment for productId: " + productId);
+        LOGGER.log(Level.INFO, "Fallback activated: Unable to update product rating and comment count at the moment for productId: " + productId);
         Map<String, String> response = new HashMap<>();
         response.put("description", "Unable to update product rating and comment count at the moment. Please try again later.");
-        return Response.ok(response).build();
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(response).build();
     }
 
     @DELETE
+    @Operation(summary = "Delete a product", description = "Deletes a product based on the given product ID")
+    @APIResponses({
+            @APIResponse(responseCode = "200", description = "Product deleted successfully"),
+            @APIResponse(responseCode = "401", description = "Unauthorized"),
+            @APIResponse(responseCode = "403", description = "Forbidden: only admins can delete products."),
+            @APIResponse(responseCode = "404", description = "Product not found"),
+            @APIResponse(responseCode = "500", description = "Internal Server Error")
+    })
+    @Parameter(name = "productId", in = ParameterIn.PATH, description = "ID of the product to be deleted")
     @Path("/{productId}")
     @Counted(name = "deleteProductCount", description = "Count of deleteProduct calls")
     @Timed(name = "deleteProductTime", description = "Time taken to delete a product")
     @Metered(name = "deleteProductMetered", description = "Rate of deleteProduct calls")
     @ConcurrentGauge(name = "deleteProductConcurrent", description = "Concurrent deleteProduct calls")
-    @Timeout(value = 2, unit = ChronoUnit.SECONDS) // Timeout after 2 seconds
+    @Timeout(value = 50, unit = ChronoUnit.SECONDS) // Timeout after 50 seconds
     @Retry(maxRetries = 3) // Retry up to 3 times
     @Fallback(fallbackMethod = "deleteProductFallback") // Fallback method if all retries fail
-    @CircuitBreaker(requestVolumeThreshold = 4) // Use circuit breaker after 4 failed requests
-    @Bulkhead(5) // Limit concurrent calls to 5
+    @CircuitBreaker(requestVolumeThreshold = 4, failureRatio = 0.5, delay = 2000)
+    @Bulkhead(100) // Limit concurrent calls to 100
     @Traced
     public Response deleteProduct(@PathParam("productId") String productId) {
-        if (jwt == null || !groups.getValue().contains("Admins")) {
-            LOGGER.info("Unauthorized: only admins can delete products.");
-            return Response.ok("Unauthorized: only admins can delete products.").build();
+        if (jwt == null) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity("Invalid token.")
+                    .build();
         }
-        if (productId == null || productId.isEmpty()) {
-            LOGGER.info("Product ID cannot be null or empty.");
-            return Response.ok("Product ID cannot be null or empty.").build();
+        if (!groups.getValue().contains("Admins")) {
+            LOGGER.log(Level.SEVERE, "Token verification failed");
+            return Response.status(Response.Status.FORBIDDEN).entity("Unauthorized: only admins can delete products.").build();
         }
         Span span = tracer.buildSpan("deleteProduct").start();
         span.setTag("productId", productId);
@@ -464,18 +516,38 @@ public class CatalogResource {
             Map<String, AttributeValue> key = new HashMap<>();
             key.put("productId", AttributeValue.builder().s(productId).build());
 
+            // Check if the product exists before deleting it
+            GetItemRequest getItemRequest = GetItemRequest.builder()
+                    .tableName(currentTableName)
+                    .key(key)
+                    .build();
+
+            GetItemResponse getItemResponse = dynamoDB.getItem(getItemRequest);
+
+            if (getItemResponse.item() == null || getItemResponse.item().isEmpty()) {
+                LOGGER.log(Level.INFO, "Product with given productId does not exist in the database.");
+                return Response.status(Response.Status.NOT_FOUND).entity("Product cannot be deleted because it is not present in the database.").build();
+            }
+
             DeleteItemRequest deleteItemRequest = DeleteItemRequest.builder()
                     .tableName(currentTableName)
                     .key(key)
                     .build();
 
             dynamoDB.deleteItem(deleteItemRequest);
+
+            LOGGER.log(Level.INFO, "Product deleted successfully.");
             span.setTag("completed", true);
-            return Response.ok("Product deleted successfully.").build();
+            Map<String, String> responseMap = new HashMap<>();
+            responseMap.put("message", "Product deleted successfully.");
+            return Response.status(Response.Status.OK).entity(responseMap).build();
+
         } catch (DynamoDbException e) {
-            LOGGER.log(Level.SEVERE, "Error while deleting product " + productId, e);
+            LOGGER.log(Level.SEVERE, "Error while deleting product: " + e.getMessage(), e);
             span.setTag("error", true);
-            throw new WebApplicationException("Error while delete product. Please try again later.", e, Response.Status.INTERNAL_SERVER_ERROR);
+            Map<String, String> responseMap = new HashMap<>();
+            responseMap.put("error", "Failed to delete product");
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(responseMap).build();
         } finally {
             span.finish();
         }
@@ -484,7 +556,6 @@ public class CatalogResource {
         LOGGER.info("Fallback activated: Unable to delete product at the moment for productId: " + productId);
         Map<String, String> response = new HashMap<>();
         response.put("description", "Unable to delete product at the moment. Please try again later.");
-        return Response.ok(response).build();
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(response).build();
     }
-
 }

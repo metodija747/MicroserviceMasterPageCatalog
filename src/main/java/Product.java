@@ -2,10 +2,11 @@ public class Product {
     private String productId;
     private String categoryName;
     private String imageURL;
-    private double Price;
-    private double AverageRating;
+    private double price;
+    private double averageRating;
     private String productName;
     private String description;
+    private String beautifulComment;
     private int commentsCount;
     private double discountPrice;
 
@@ -36,19 +37,19 @@ public class Product {
     }
 
     public double getPrice() {
-        return Price;
+        return price;
     }
 
     public void setPrice(double price) {
-        this.Price = price;
+        this.price = price;
     }
 
     public double getAverageRating() {
-        return AverageRating;
+        return averageRating;
     }
 
     public void setAverageRating(double averageRating) {
-        this.AverageRating = averageRating;
+        this.averageRating = averageRating;
     }
 
     public String getProductName() {
@@ -82,4 +83,14 @@ public class Product {
     public void setDiscountPrice(double discountPrice) {
         this.discountPrice = discountPrice;
     }
+
+    public String getBeautifulComment() {
+        return beautifulComment;
+    }
+
+    public void setbeautifulComment(String beautifulComment) {
+        this.beautifulComment = beautifulComment;
+    }
+
+
 }

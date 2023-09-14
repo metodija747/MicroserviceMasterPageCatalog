@@ -14,7 +14,16 @@ import java.util.logging.Logger;
 @ApplicationPath("/")
 @LoginConfig(authMethod = "MP-JWT")
 @RegisterService
-@OpenAPIDefinition(info = @Info(title = "Product Catalog API", version = "1.0.0"))
+@OpenAPIDefinition(
+        info = @Info(title = "Product Catalog API", version = "1.0.0"),
+        security = @SecurityRequirement(name = "jwtAuth")
+)
+@SecurityScheme(
+        securitySchemeName = "jwtAuth",
+        type = SecuritySchemeType.HTTP,
+        scheme = "bearer",
+        bearerFormat = "JWT"
+)
 public class ProductCatalogApplication extends Application {
     private static final Logger LOG = Logger.getLogger(ProductCatalogApplication.class.getName());
     public ProductCatalogApplication() {
