@@ -76,7 +76,7 @@ kumuluzee:
       enabled: true
       mapping: /products/metrics
 #    logstash:
-#      enabled: true
+#      enabled:  true
 #      address: udp://logstash-logstash:5043
 #      port: 5043
 #      period-s: 60
