@@ -79,11 +79,11 @@ kumuluzee:
     servlet:
       enabled: true
       mapping: /products/metrics
-    logstash:
-      enabled: true
-      address: 20.246.243.191
-      port: 5043
-      period-s: 5
+#    logstash:
+#      enabled: true
+#      address: 20.246.243.191
+#      port: 5043
+#      period-s: 5
   jwt-auth:
     jwks-uri: https://cognito-idp.us-east-1.amazonaws.com/us-east-1_cl8iVMzUw/.well-known/jwks.json
     issuer: https://cognito-idp.us-east-1.amazonaws.com/us-east-1_cl8iVMzUw
