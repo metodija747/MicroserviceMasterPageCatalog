@@ -10,7 +10,9 @@ data:
       }
     }
     output {
-    elasticsearch {
-    hosts => ["http://elasticsearch-service:9200"]
+      loki {
+        url => "http://loki-service:3100/loki/api/v1/push"
+        batch_send_count => 5
+        batch_event_count => 5
       }
     }
