@@ -5,14 +5,13 @@ metadata:
 data:
   logstash.conf: |
     input {
-      tcp {
+      udp {
         port => 5043
       }
     }
     output {
-      loki {
-        url => "http://loki-service:3100/loki/api/v1/push"
-        batch_send_count => 5
-        batch_event_count => 5
+      elasticsearch {
+        hosts => ["http://elasticsearch-service:9200"]
+        index => "logstash-%{+YYYY.MM.dd}"
       }
     }

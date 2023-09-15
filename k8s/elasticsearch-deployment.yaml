@@ -1,24 +1,27 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: v1
+kind: Pod
 metadata:
   name: elasticsearch
+  labels:
+    app: elasticsearch
 spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: elasticsearch
-  template:
-    metadata:
-      labels:
-        app: elasticsearch
-    spec:
-      containers:
-        - name: elasticsearch
-          image: docker.elastic.co/elasticsearch/elasticsearch:7.15.0
-          ports:
-            - containerPort: 9200
-          resources:
-            requests:
-              memory: "1Gi"
-            limits:
-              memory: "2Gi"
+  initContainers:
+    - name: sysctl-init
+      image: busybox
+      command: ["sysctl", "-w", "vm.max_map_count=262144"]
+      securityContext:
+        privileged: true
+  containers:
+    - name: elasticsearch
+      image: docker.elastic.co/elasticsearch/elasticsearch:7.15.0
+      ports:
+        - containerPort: 9200
+      resources:
+        requests:
+          memory: "1Gi"
+        limits:
+          memory: "2Gi"
+      env:  # Add this section to set environment variables
+        - name: "discovery.type"
+          value: "single-node"
+
