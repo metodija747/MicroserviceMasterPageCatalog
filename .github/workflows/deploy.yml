@@ -36,3 +36,12 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: 2741/catalog-microservice:latest
+
+      # New steps to build and push custom Logstash image
+      - name: Build and push Custom Logstash
+        uses: docker/build-push-action@v2
+        with:
+          context: ./logstash # path to the directory containing the Dockerfile for Logstash
+          file: ./logstash/Dockerfile # Replace with your actual path
+          push: true
+          tags: 2741/custom-logstash:latest
