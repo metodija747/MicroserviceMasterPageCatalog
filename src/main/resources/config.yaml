@@ -22,29 +22,29 @@ kumuluzee:
       server-auto-config:
         enabled: true
         original-uri-check: false
-  logs:
-    config-file:
-        '<?xml version="1.0" encoding="UTF-8"?>
-         <Configuration name="tutorial-logging">
-           <Appenders>
-             <!-- Added Console Appender -->
-             <Console name="console" target="SYSTEM_OUT">
-               <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
-             </Console>
-             <!-- Existing Socket Appender -->
-            <Socket name="logstash" protocol="tcp" host="20.246.243.191" port="5043">
-              <JsonLayout compact="true" eventEol="true" />
-            </Socket>
-           </Appenders>
-           <Loggers>
-             <!-- Default logger -->
-             <Root level="info">
-               <AppenderRef ref="console"/>
-               <AppenderRef ref="logstash"/>
-             </Root>
-           </Loggers>
-         </Configuration>
-         '
+#  logs:
+#    config-file:
+#        '<?xml version="1.0" encoding="UTF-8"?>
+#         <Configuration name="tutorial-logging">
+#           <Appenders>
+#             <!-- Added Console Appender -->
+#             <Console name="console" target="SYSTEM_OUT">
+#               <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+#             </Console>
+#             <!-- Existing Socket Appender -->
+#            <Socket name="logstash" protocol="tcp" host="20.246.243.191" port="5043">
+#              <JsonLayout compact="true" eventEol="true" />
+#            </Socket>
+#           </Appenders>
+#           <Loggers>
+#             <!-- Default logger -->
+#             <Root level="info">
+#               <AppenderRef ref="console"/>
+#               <AppenderRef ref="logstash"/>
+#             </Root>
+#           </Loggers>
+#         </Configuration>
+#         '
   name: catalog-service
   version: 1.0.0
   env:
@@ -80,11 +80,11 @@ kumuluzee:
     servlet:
       enabled: true
       mapping: /products/metrics
-#    logstash:
-#      enabled: true
-#      address: udp://logstash-logstash:5043
-#      port: 5043
-#      period-s: 60
+    logstash:
+      enabled: true
+      address: 20.246.243.191
+      port: 5043
+      period-s: 5
   jwt-auth:
     jwks-uri: https://cognito-idp.us-east-1.amazonaws.com/us-east-1_cl8iVMzUw/.well-known/jwks.json
     issuer: https://cognito-idp.us-east-1.amazonaws.com/us-east-1_cl8iVMzUw
