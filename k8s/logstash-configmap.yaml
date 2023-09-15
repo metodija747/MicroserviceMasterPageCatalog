@@ -11,7 +11,7 @@ data:
     }
     output {
       elasticsearch {
-        hosts => ["http://elasticsearch-service:9200"]
+        hosts => ["http://elasticsearch:9200"]
         index => "logstash-%{+YYYY.MM.dd}"
       }
     }
