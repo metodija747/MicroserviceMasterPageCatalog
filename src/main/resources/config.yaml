@@ -22,24 +22,30 @@ kumuluzee:
       server-auto-config:
         enabled: true
         original-uri-check: false
-#  logs:
-#    config-file:
-#        '<?xml version="1.0" encoding="UTF-8"?>
-#         <Configuration name="tutorial-logging">
-#           <Appenders>
-#             <!-- Existing Console Appender -->
-#             <Socket name="logstash" protocol="tcp" host="logstash-service" port="5043">
-#               <JsonLayout compact="true" eventEol="true" />
-#             </Socket>
-#           </Appenders>
-#           <Loggers>
-#             <!-- Default logger -->
-#             <Root level="trace">
-#               <AppenderRef ref="console"/>
-#               <AppenderRef ref="logstash"/>
-#             </Root>
-#           </Loggers>
-#         </Configuration>'
+  logs:
+    config-file:
+        '<?xml version="1.0" encoding="UTF-8"?>
+         <Configuration name="tutorial-logging">
+           <Appenders>
+             <!-- Existing Console Appender -->
+             <Console name="ConsoleAppender" target="SYSTEM_OUT">
+               <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n"/>
+             </Console>
+
+             <!-- HTTP Appender for Loki -->
+             <Http name="HttpAppender" url="http://loki-service:3100/api/prom/push">
+               <JsonLayout compact="true" eventEol="true"/>
+               <Property name="X-Scope-OrgID" value="1"/>
+             </Http>
+           </Appenders>
+
+           <Loggers>
+             <Root level="info">
+               <AppenderRef ref="ConsoleAppender"/>
+               <AppenderRef ref="HttpAppender"/>
+             </Root>
+           </Loggers>
+         </Configuration>'
   name: catalog-service
   version: 1.0.0
   env:
@@ -59,11 +65,11 @@ kumuluzee:
     servlet:
       mapping: /products/health
       enabled: true
-#    logs:
-#      enabled: true
-#      type: both
-#      level: FINE
-#      period-s: 60
+    logs:
+      enabled: true
+      type: both
+      level: FINE
+      period-s: 60
     checks:
       disk-space-health-check:
         threshold: 100000000
