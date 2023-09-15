@@ -139,10 +139,26 @@ public class CatalogResource {
             String filterExpression = "";
             Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
 
+            // Capitalize first letter of each word in searchTerm
             if (searchTerm != null && !searchTerm.isEmpty()) {
-                filterExpression += "contains(productName, :val)";
-                expressionAttributeValues.put(":val", AttributeValue.builder().s(searchTerm).build());
+                String[] words = searchTerm.split(" ");
+                StringBuilder filterExpressionBuilder = new StringBuilder();
+                int index = 0;
+                for (String word : words) {
+                    if (word != null && !word.isEmpty()) {
+                        String capitalizedWord = word.substring(0, 1).toUpperCase() + word.substring(1).toLowerCase();
+                        if (index > 0) {
+                            filterExpressionBuilder.append(" AND ");
+                        }
+                        filterExpressionBuilder.append("contains(productName, :val").append(index).append(")");
+                        expressionAttributeValues.put(":val" + index, AttributeValue.builder().s(capitalizedWord).build());
+
+                        index++;
+                    }
+                }
+                filterExpression += filterExpressionBuilder.toString();
             }
+
 
             if (category != null && !category.isEmpty()) {
                 if (!filterExpression.isEmpty()) {
