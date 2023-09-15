@@ -84,12 +84,18 @@ public class CatalogResource {
     @GET
     @Operation(summary = "Get Products", description = "This endpoint allows users to get a list of products.")
     @Parameters({
-            @Parameter(name = "searchTerm", description = "Search term for filtering products", in = ParameterIn.QUERY),
-            @Parameter(name = "sortBy", description = "Field to sort by", in = ParameterIn.QUERY),
-            @Parameter(name = "sortOrder", description = "Sort order", in = ParameterIn.QUERY),
-            @Parameter(name = "category", description = "Category for filtering products", in = ParameterIn.QUERY),
-            @Parameter(name = "page", description = "Page number", in = ParameterIn.QUERY),
-            @Parameter(name = "pageSize", description = "Page size", in = ParameterIn.QUERY)
+            @Parameter(name = "searchTerm", description = "Search term for filtering products",
+                    in = ParameterIn.QUERY, example = "Chess"),
+            @Parameter(name = "sortBy", description = "Field to sort by",
+                    in = ParameterIn.QUERY, example = "Price"),
+            @Parameter(name = "sortOrder", description = "Sort order",
+                    in = ParameterIn.QUERY, example = "ASC"),
+            @Parameter(name = "category", description = "Category for filtering products",
+                    in = ParameterIn.QUERY, example = "Timepiece"),
+            @Parameter(name = "page", description = "Page number",
+                    in = ParameterIn.QUERY, example = "1"),
+            @Parameter(name = "pageSize", description = "Page size",
+                    in = ParameterIn.QUERY, example = "4")
     })
     @APIResponses({
             @APIResponse(responseCode = "200", description = "Successfully obtained products list."),
