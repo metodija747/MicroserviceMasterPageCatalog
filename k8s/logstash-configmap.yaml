@@ -5,7 +5,7 @@ metadata:
 data:
   logstash.conf: |
     input {
-      udp {
+      tcp {
         port => 5043
       }
     }
