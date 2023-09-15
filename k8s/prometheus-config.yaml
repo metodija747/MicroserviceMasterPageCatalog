@@ -14,3 +14,27 @@ data:
         - targets: ['20.231.233.217:80']
           labels:
             group: 'product-metrics'
+      - job_name: 'comments-microservice'
+        metrics_path: '/comments/metrics'
+        static_configs:
+        - targets: ['20.231.233.217:80']
+          labels:
+            group: 'comment-metrics'
+      - job_name: 'orders-microservice'
+        metrics_path: '/orders/metrics'
+        static_configs:
+        - targets: ['20.231.233.217:80']
+          labels:
+            group: 'order-metrics'
+      - job_name: 'cart-microservice'
+        metrics_path: '/cart/metrics'
+        static_configs:
+        - targets: ['20.231.233.217:80']
+          labels:
+            group: 'cart-metrics'
+      - job_name: 'authorization-microservice'
+        metrics_path: '/authorization/metrics'
+        static_configs:
+        - targets: ['20.231.233.217:80']
+          labels:
+            group: 'authorization-metrics'

@@ -85,13 +85,16 @@ public class CatalogResource {
     @Operation(summary = "Get Products", description = "This endpoint allows users to get a list of products.")
     @Parameters({
             @Parameter(name = "searchTerm", description = "Search term for filtering products",
-                    in = ParameterIn.QUERY, example = "Chess"),
+                    in = ParameterIn.QUERY, example = "Clock"),
             @Parameter(name = "sortBy", description = "Field to sort by",
-                    in = ParameterIn.QUERY, example = "Price"),
+                    in = ParameterIn.QUERY, example = "Price",
+                    schema = @Schema(enumeration = {"Price", "AverageRating"})),
             @Parameter(name = "sortOrder", description = "Sort order",
-                    in = ParameterIn.QUERY, example = "ASC"),
+                    in = ParameterIn.QUERY, example = "ASC",
+                    schema = @Schema(enumeration = {"ASC", "DSC"})),
             @Parameter(name = "category", description = "Category for filtering products",
-                    in = ParameterIn.QUERY, example = "Timepiece"),
+                    in = ParameterIn.QUERY, example = "Timepiece",
+                    schema = @Schema(enumeration = {"All", "Jewelry", "Timepiece", "Games"})),
             @Parameter(name = "page", description = "Page number",
                     in = ParameterIn.QUERY, example = "1"),
             @Parameter(name = "pageSize", description = "Page size",
@@ -318,8 +321,20 @@ public class CatalogResource {
     }
 
     @POST
-    @Operation(summary = "Add a new product", description = "This endpoint allows admins to add a new product to the product catalog.")
-    @RequestBody(description = "Product object that needs to be added", required = true, content = @Content(schema = @Schema(implementation = Product.class)))
+    @Operation(
+            summary = "Add a new product",
+            description = "This endpoint allows admins to add a new product to the product catalog."
+    )
+    @RequestBody(
+            description = "Product object that needs to be added",
+            required = true,
+            content = @Content(
+                    schema = @Schema(
+                            implementation = Product.class,
+                            example = "{ \"averageRating\": 0, \"beautifulComment\": \"Excellent\", \"categoryName\": \"Timepiece\", \"commentsCount\": 0, \"description\": \"Perfect\", \"discountPrice\": 40, \"imageURL\": \"https://www.theclockstore.co.uk/wp-content/uploads/2022/11/3277BR-front-01-A-Aberdeen_1200x-1-Medium-300x300.jpeg\", \"price\": 70, \"productId\": \"\", \"productName\": \"Aberdeen Clock\" }"
+                    )
+            )
+    )
     @APIResponses({
             @APIResponse(responseCode = "200", description = "Product successfully added."),
             @APIResponse(responseCode = "401", description = "Unauthorized: Invalid token."),
@@ -362,7 +377,10 @@ public class CatalogResource {
         checkAndUpdateDynamoDbClient();
         try {
             Map<String, AttributeValue> item = new HashMap<>();
-            item.put("productId", AttributeValue.builder().s(product.getProductId()).build());
+            String productId = (product.getProductId() != null && !product.getProductId().isEmpty())
+                    ? product.getProductId()
+                    : UUID.randomUUID().toString();
+            item.put("productId", AttributeValue.builder().s(productId).build());
             item.put("AverageRating", AttributeValue.builder().n(Double.toString(product.getAverageRating())).build());
             item.put("categoryName", AttributeValue.builder().s(product.getCategoryName()).build());
             item.put("imageURL", AttributeValue.builder().s(product.getImageURL()).build());
@@ -407,9 +425,29 @@ public class CatalogResource {
             @APIResponse(responseCode = "401", description = "Unauthorized"),
             @APIResponse(responseCode = "500", description = "Internal server error")
     })
-    @Parameter(name = "productId", in = ParameterIn.PATH, description = "Product ID")
-    @Parameter(name = "avgRating", in = ParameterIn.QUERY, description = "Average rating to update")
-    @Parameter(name = "action", in = ParameterIn.QUERY, description = "Action to perform on comment count")
+    @Parameter(
+            name = "productId",
+            in = ParameterIn.PATH,
+            description = "Product ID",
+            example = "a9abe32e-9bd6-43aa-bc00-9044a27b858b"
+    )
+    @Parameter(
+            name = "avgRating",
+            in = ParameterIn.QUERY,
+            description = "Average rating to update",
+            example = "3.5",
+            schema = @Schema(format = "float", minimum = "0", maximum = "5")
+    )
+    @Parameter(
+            name = "action",
+            in = ParameterIn.QUERY,
+            description = "Action to perform on comment count",
+            example = "add",
+            schema = @Schema(
+                    description = "Action to perform on comment count",
+                    enumeration = {"add", "zero", "delete"}
+            )
+    )
     @Path("/{productId}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Counted(name = "updateProductRatingCount", description = "Count of updateProductRating calls")
@@ -502,7 +540,7 @@ public class CatalogResource {
             @APIResponse(responseCode = "404", description = "Product not found"),
             @APIResponse(responseCode = "500", description = "Internal Server Error")
     })
-    @Parameter(name = "productId", in = ParameterIn.PATH, description = "ID of the product to be deleted")
+    @Parameter(name = "productId", in = ParameterIn.PATH, description = "ID of the product to be deleted", required = true, example = "a9abe32e-9bd6-43aa-bc00-9044a27b858b")
     @Path("/{productId}")
     @Counted(name = "deleteProductCount", description = "Count of deleteProduct calls")
     @Timed(name = "deleteProductTime", description = "Time taken to delete a product")
