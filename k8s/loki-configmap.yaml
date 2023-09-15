@@ -6,10 +6,8 @@ metadata:
 data:
   local-config.yaml: |
     auth_enabled: false
-
     server:
       http_listen_port: 3100
-
     ingester:
       lifecycler:
         address: 127.0.0.1
@@ -17,7 +15,8 @@ data:
           kvstore:
             store: inmemory
           replication_factor: 1
-
+      wal:
+        dir: /tmp/loki/wal
     schema_config:
       configs:
         - from: 2020-05-15
@@ -27,3 +26,8 @@ data:
           index:
             prefix: index_
             period: 24h
+    storage_config:
+      boltdb:
+        directory: /tmp/loki/index
+      filesystem:
+        directory: /tmp/loki/chunks
