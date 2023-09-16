@@ -217,8 +217,11 @@ public class CatalogResource {
             span.setTag("completed", true);
             getProductsHistogram.update(endTime - startTime);
             LOGGER.info("Successfully obtained product list");
-            return Response.ok(responseBody).build();
-
+            return Response.ok(responseBody)
+                    .header("Access-Control-Allow-Origin", "*")
+                    .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+                    .header("Access-Control-Allow-Headers", "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent")
+                    .build();
         } catch (Exception e) {
             long endTime = System.nanoTime();
             getProductsHistogram.update(endTime - startTime);
@@ -243,8 +246,12 @@ public class CatalogResource {
         Map<String, String> description = new HashMap<>();
         description.put("description", "Unable to fetch products at the moment. Please try again later.");
         response.put("body", description);
-
-        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(response).build();
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                .header("Access-Control-Allow-Origin", "*")
+                .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+                .header("Access-Control-Allow-Headers", "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent")
+                .entity(response)
+                .build();
     }
 
 
@@ -296,12 +303,21 @@ public class CatalogResource {
             if (item == null || item.isEmpty()) {
                 LOGGER.log(Level.WARNING, "Product not found");
                 span.setTag("error", true);
-                return Response.status(Response.Status.NOT_FOUND).entity("Product not found").build();
+                return Response.status(Response.Status.NOT_FOUND)
+                        .header("Access-Control-Allow-Origin", "*")
+                        .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+                        .header("Access-Control-Allow-Headers", "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent")
+                        .entity("Product not found")
+                        .build();
             }
             Map<String, String> transformedItem = ResponseTransformer.transformItem(item);
             span.setTag("completed", true);
             LOGGER.log(Level.INFO, "Successfully obtained product details");
-            return Response.ok(transformedItem).build();
+            return Response.ok(transformedItem)
+                    .header("Access-Control-Allow-Origin", "*")
+                    .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+                    .header("Access-Control-Allow-Headers", "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent")
+                    .build();
         } catch (DynamoDbException e) {
             LOGGER.log(Level.SEVERE, "Failed to obtain product details", e);
             span.setTag("error", true);
@@ -316,6 +332,9 @@ public class CatalogResource {
         Map<String, String> responseMap = new HashMap<>();
         responseMap.put("description", "Unable to fetch product at the moment. Please try again later.");
         return Response.status(500)
+                .header("Access-Control-Allow-Origin", "*")
+                .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+                .header("Access-Control-Allow-Headers", "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent")
                 .entity(responseMap)
                 .build();
     }
@@ -356,12 +375,20 @@ public class CatalogResource {
         if (jwt == null) {
             LOGGER.log(Level.SEVERE, "Token verification failed");
             return Response.status(Response.Status.UNAUTHORIZED)
+                    .header("Access-Control-Allow-Origin", "*")
+                    .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+                    .header("Access-Control-Allow-Headers", "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent")
                     .entity("Invalid token.")
                     .build();
         }
         if (!groups.getValue().contains("Admins")) {
             LOGGER.log(Level.SEVERE, "Token verification failed");
-            return Response.status(Response.Status.FORBIDDEN).entity("Unauthorized: only admins can add/update products.").build();
+            return Response.status(Response.Status.FORBIDDEN)
+                    .header("Access-Control-Allow-Origin", "*")
+                    .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+                    .header("Access-Control-Allow-Headers", "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent")
+                    .entity("Unauthorized: only admins can add/update products.")
+                    .build();
         }
         Span span = tracer.buildSpan("addProduct").start();
         span.setTag("productId", product.getProductId());
@@ -401,7 +428,12 @@ public class CatalogResource {
 
             Map<String, String> responseBody = new HashMap<>();
             responseBody.put("message", "Product added successfully");
-            return Response.status(Response.Status.OK).entity(responseBody).build();
+            return Response.status(Response.Status.OK)
+                    .header("Access-Control-Allow-Origin", "*")
+                    .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+                    .header("Access-Control-Allow-Headers", "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent")
+                    .entity(responseBody)
+                    .build();
         } catch (DynamoDbException e) {
             LOGGER.log(Level.SEVERE, "Error while creating/updating product " + product.getProductId(), e);
             span.setTag("error", true);
@@ -415,7 +447,12 @@ public class CatalogResource {
         LOGGER.info("Fallback activated: Unable to add/update product at the moment for product name: " + product.getProductName());
         Map<String, String> responseBody = new HashMap<>();
         responseBody.put("description", "Unable to add/update product at the moment. Please try again later.");
-        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(responseBody).build();
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                .header("Access-Control-Allow-Origin", "*")
+                .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+                .header("Access-Control-Allow-Headers", "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent")
+                .entity(responseBody)
+                .build();
     }
 
     @PUT
@@ -466,6 +503,9 @@ public class CatalogResource {
         if (jwt == null) {
             LOGGER.log(Level.SEVERE, "Token verification failed");
             return Response.status(Response.Status.UNAUTHORIZED)
+                    .header("Access-Control-Allow-Origin", "*")
+                    .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+                    .header("Access-Control-Allow-Headers", "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent")
                     .entity("Invalid token.")
                     .build();
         }
@@ -513,7 +553,11 @@ public class CatalogResource {
             responseBody.put("message", "Product rating and comment count updated successfully");
             responseBody.put("averageRating", avgRating);
             LOGGER.log(Level.INFO, "Product rating and comment count updated successfully");
-            return Response.ok(responseBody).build();
+            return Response.ok(responseBody)
+                    .header("Access-Control-Allow-Origin", "*")
+                    .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+                    .header("Access-Control-Allow-Headers", "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent")
+                    .build();
         } catch (DynamoDbException e) {
             LOGGER.log(Level.SEVERE, "Error while updating product rating and comment count " + productId, e);
             span.setTag("error", true);
@@ -528,7 +572,12 @@ public class CatalogResource {
         LOGGER.log(Level.INFO, "Fallback activated: Unable to update product rating and comment count at the moment for productId: " + productId);
         Map<String, String> response = new HashMap<>();
         response.put("description", "Unable to update product rating and comment count at the moment. Please try again later.");
-        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(response).build();
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                .header("Access-Control-Allow-Origin", "*")
+                .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+                .header("Access-Control-Allow-Headers", "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent")
+                .entity(response)
+                .build();
     }
 
     @DELETE
@@ -554,13 +603,22 @@ public class CatalogResource {
     @Traced
     public Response deleteProduct(@PathParam("productId") String productId) {
         if (jwt == null) {
+            LOGGER.log(Level.SEVERE, "Token verification failed");
             return Response.status(Response.Status.UNAUTHORIZED)
+                    .header("Access-Control-Allow-Origin", "*")
+                    .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+                    .header("Access-Control-Allow-Headers", "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent")
                     .entity("Invalid token.")
                     .build();
         }
         if (!groups.getValue().contains("Admins")) {
             LOGGER.log(Level.SEVERE, "Token verification failed");
-            return Response.status(Response.Status.FORBIDDEN).entity("Unauthorized: only admins can delete products.").build();
+            return Response.status(Response.Status.FORBIDDEN)
+                    .header("Access-Control-Allow-Origin", "*")
+                    .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+                    .header("Access-Control-Allow-Headers", "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent")
+                    .entity("Unauthorized: only admins can add/update products.")
+                    .build();
         }
         Span span = tracer.buildSpan("deleteProduct").start();
         span.setTag("productId", productId);
@@ -586,8 +644,12 @@ public class CatalogResource {
 
             if (getItemResponse.item() == null || getItemResponse.item().isEmpty()) {
                 LOGGER.log(Level.INFO, "Product with given productId does not exist in the database.");
-                return Response.status(Response.Status.NOT_FOUND).entity("Product cannot be deleted because it is not present in the database.").build();
-            }
+                return Response.status(Response.Status.NOT_FOUND)
+                        .header("Access-Control-Allow-Origin", "*")
+                        .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+                        .header("Access-Control-Allow-Headers", "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent")
+                        .entity("Product cannot be deleted because it is not present in the database.")
+                        .build();            }
 
             DeleteItemRequest deleteItemRequest = DeleteItemRequest.builder()
                     .tableName(currentTableName)
@@ -600,14 +662,19 @@ public class CatalogResource {
             span.setTag("completed", true);
             Map<String, String> responseMap = new HashMap<>();
             responseMap.put("message", "Product deleted successfully.");
-            return Response.status(Response.Status.OK).entity(responseMap).build();
+            return Response.status(Response.Status.OK)
+                    .header("Access-Control-Allow-Origin", "*")
+                    .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+                    .header("Access-Control-Allow-Headers", "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent")
+                    .entity(responseMap)
+                    .build();
 
         } catch (DynamoDbException e) {
             LOGGER.log(Level.SEVERE, "Error while deleting product: " + e.getMessage(), e);
             span.setTag("error", true);
             Map<String, String> responseMap = new HashMap<>();
             responseMap.put("error", "Failed to delete product");
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(responseMap).build();
+            throw new WebApplicationException("Error while deleting product. Please try again later.", e, Response.Status.INTERNAL_SERVER_ERROR);
         } finally {
             span.finish();
         }
@@ -616,6 +683,10 @@ public class CatalogResource {
         LOGGER.info("Fallback activated: Unable to delete product at the moment for productId: " + productId);
         Map<String, String> response = new HashMap<>();
         response.put("description", "Unable to delete product at the moment. Please try again later.");
-        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(response).build();
-    }
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                .header("Access-Control-Allow-Origin", "*")
+                .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+                .header("Access-Control-Allow-Headers", "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent")
+                .entity(response)
+                .build();    }
 }
