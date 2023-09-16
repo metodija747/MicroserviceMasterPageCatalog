@@ -2,7 +2,7 @@ kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: jaeger-operator-in-myproject
-  namespace: default
+  namespace: ingress-basic
 subjects:
   - kind: ServiceAccount
     name: jaeger-operator

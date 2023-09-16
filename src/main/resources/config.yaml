@@ -63,11 +63,11 @@ kumuluzee:
     servlet:
       mapping: /products/health
       enabled: true
-#    logs:
-#      enabled: true
-#      type: both
-#      level: FINE
-#      period-s: 60
+    logs:
+      enabled: true
+      type: both
+      level: FINE
+      period-s: 60
     checks:
       disk-space-health-check:
         threshold: 100000000
@@ -79,32 +79,29 @@ kumuluzee:
     servlet:
       enabled: true
       mapping: /products/metrics
-#    logstash:
-#      enabled: true
-#      address: 20.246.243.191
-#      port: 5043
-#      period-s: 5
+    logstash:
+      enabled: true
+      address: 20.246.243.191
+      port: 5043
+      period-s: 5
   jwt-auth:
     jwks-uri: https://cognito-idp.us-east-1.amazonaws.com/us-east-1_cl8iVMzUw/.well-known/jwks.json
     issuer: https://cognito-idp.us-east-1.amazonaws.com/us-east-1_cl8iVMzUw
-#  opentracing:
-#    jaeger:
-#      service-name: catalog-service
-##      agent-host: localhost
-##      agent-port: 5775
-##      endpoint: http://localhost:14268/api/traces
-#      agent-host: simplest-agent.observability
-#      agent-port: 5775
-#      reporter:
-#        log-spans: true
-#        max-queue-size: 10000
-#        flush-interval: 1000
-#        tags: key1=val1, key2=val2
-#      sampler:
-#        type: const
-#        param: 1
-#      propagation: JAEGER
-#      traceid-128bit: true
+  opentracing:
+    jaeger:
+      service-name: catalog-service
+      agent-host: simplest-agent.observability
+      agent-port: 5775
+      reporter:
+        log-spans: true
+        max-queue-size: 10000
+        flush-interval: 1000
+        tags: key1=val1, key2=val2
+      sampler:
+        type: const
+        param: 1
+      propagation: JAEGER
+      traceid-128bit: true
 aws-config:
   dynamo-region: us-east-1
   table-name: ProductCatalog
