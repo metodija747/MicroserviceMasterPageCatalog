@@ -3,23 +3,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: etcd-client  # renamed from 'etcd' to 'etcd-client'
+  name: etcd-client   
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: etcd-client  # renamed from 'etcd' to 'etcd-client'
+      app: etcd-client   
   template:
     metadata:
       labels:
-        app: etcd-client  # renamed from 'etcd' to 'etcd-client'
+        app: etcd-client   
     spec:
       containers:
-        - name: etcd-client  # renamed from 'etcd' to 'etcd-client'
+        - name: etcd-client   
           image: quay.io/coreos/etcd:v3.3.15
           command:
             - /usr/local/bin/etcd
-            - --advertise-client-urls=http://etcd-client:2379  # renamed from 'etcd' to 'etcd-client'
+            - --advertise-client-urls=http://etcd-client:2379  
             - --listen-client-urls=http://0.0.0.0:2379
           ports:
             - containerPort: 2379

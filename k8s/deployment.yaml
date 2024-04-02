@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: catalog-microservice
-  annotations:   # <--  Add Prometheus annotations here
+  annotations:
     prometheus.io/scrape: 'true'
     prometheus.io/path: '/products/metrics'
     prometheus.io/port: '8080'
@@ -32,3 +32,6 @@ spec:
                 secretKeyRef:
                   name: aws-credentials
                   key: AWS_SECRET_ACCESS_KEY
+          resources:
+            limits:
+              memory: "512Mi"
