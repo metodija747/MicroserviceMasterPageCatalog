@@ -274,7 +274,7 @@ public class CatalogResource {
     @Retry(maxRetries = 3) // Retry up to 3 times
     @Fallback(fallbackMethod = "getProductFallback") // Fallback method if all retries fail
     @CircuitBreaker(requestVolumeThreshold = 4, failureRatio = 0.5, delay = 2000)
-    @Bulkhead(100) // Limit concurrent calls to 5
+//    @Bulkhead(100) // Limit concurrent calls to 5
     @Traced
     public Response getProduct(
             @PathParam("productId") String productId) {
