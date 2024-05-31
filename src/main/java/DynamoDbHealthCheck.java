@@ -22,31 +22,23 @@ public class DynamoDbHealthCheck implements HealthCheck {
         this.dynamoDB = DynamoDbClient.builder()
                 .region(Region.of(configProperties.getDynamoRegion()))
                 .build();
-        this.REQUIRED_TABLE = configProperties.getTableName();
-        HealthCheckResponseBuilder responseBuilder = HealthCheckResponse.named("DynamoDB health check");
+
+        HealthCheckResponseBuilder responseBuilder = HealthCheckResponse.named("DynamoDB tables health check");
         try {
-            DescribeTableResponse describeTableResponse = dynamoDB.describeTable(DescribeTableRequest.builder().tableName(REQUIRED_TABLE).build());
-            ProvisionedThroughputDescription throughput = describeTableResponse.table().provisionedThroughput();
-
-            if (throughput.readCapacityUnits() < 1 || throughput.writeCapacityUnits() < 1) {
-                return responseBuilder.down()
-                        .withData("error", "Table " + REQUIRED_TABLE + " has insufficient read/write capacity")
-                        .withData("tableName", REQUIRED_TABLE)
-                        .withData("readCapacityUnits", throughput.readCapacityUnits())
-                        .withData("writeCapacityUnits", throughput.writeCapacityUnits())
-                        .build();
+            ListTablesResponse listTablesResponse = dynamoDB.listTables();
+            if (listTablesResponse.hasTableNames() && !listTablesResponse.tableNames().isEmpty()) {
+                responseBuilder.up();
+                responseBuilder.withData("tableCount", listTablesResponse.tableNames().size());
+                responseBuilder.withData("tables", String.join(", ", listTablesResponse.tableNames()));
+            } else {
+                responseBuilder.down().withData("error", "No tables found");
             }
-
-            return responseBuilder.up()
-                    .withData("tableName", REQUIRED_TABLE)
-                    .withData("readCapacityUnits", throughput.readCapacityUnits())
-                    .withData("writeCapacityUnits", throughput.writeCapacityUnits())
-                    .build();
         } catch (DynamoDbException e) {
             return responseBuilder.down()
-                    .withData("error", "Table " + REQUIRED_TABLE + " does not exist or another error occurred" + e)
-                    .withData("tableName", REQUIRED_TABLE)
+                    .withData("error", "Failed to list DynamoDB tables: " + e.getMessage())
                     .build();
         }
+
+        return responseBuilder.build();
     }
 }
