@@ -44,7 +44,7 @@ public class DynamoDbHealthCheck implements HealthCheck {
                     .build();
         } catch (DynamoDbException e) {
             return responseBuilder.down()
-                    .withData("error", "Table " + REQUIRED_TABLE + " does not exist or another error occurred")
+                    .withData("error", "Table " + REQUIRED_TABLE + " does not exist or another error occurred" + e)
                     .withData("tableName", REQUIRED_TABLE)
                     .build();
         }
