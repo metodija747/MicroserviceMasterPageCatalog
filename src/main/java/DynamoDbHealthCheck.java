@@ -31,7 +31,7 @@ public class DynamoDbHealthCheck implements HealthCheck {
                 responseBuilder.withData("tableCount", listTablesResponse.tableNames().size());
                 responseBuilder.withData("tables", String.join(", ", listTablesResponse.tableNames()));
             } else {
-                responseBuilder.down().withData("error", "No tables found " + configProperties.getDynamoRegion());
+                responseBuilder.down().withData("error", "No tables found " + listTablesResponse + configProperties.getDynamoRegion());
             }
         } catch (DynamoDbException e) {
             return responseBuilder.down()
@@ -41,4 +41,5 @@ public class DynamoDbHealthCheck implements HealthCheck {
 
         return responseBuilder.build();
     }
+
 }
