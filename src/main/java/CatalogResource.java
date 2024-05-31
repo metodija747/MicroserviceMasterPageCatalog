@@ -65,7 +65,9 @@ public class CatalogResource {
     private volatile String currentRegion;
     private volatile String currentTableName;
     private void checkAndUpdateDynamoDbClient() {
-        String newRegion = configProperties.getDynamoRegion();
+//        String newRegion = configProperties.getDynamoRegion();
+        String newRegion = "us-east-1";
+
         if (!newRegion.equals(currentRegion)) {
             try {
                 this.dynamoDB = DynamoDbClient.builder()
@@ -77,7 +79,8 @@ public class CatalogResource {
                 throw new WebApplicationException("Error while creating DynamoDB client: " + e.getMessage(), e, Response.Status.INTERNAL_SERVER_ERROR);
             }
         }
-        currentTableName = configProperties.getTableName();
+//        currentTableName = configProperties.getTableName();
+        currentTableName = "ProductCatalog";
     }
 
 
