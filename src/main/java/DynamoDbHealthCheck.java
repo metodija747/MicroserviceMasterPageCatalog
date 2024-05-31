@@ -31,7 +31,7 @@ public class DynamoDbHealthCheck implements HealthCheck {
                 responseBuilder.withData("tableCount", listTablesResponse.tableNames().size());
                 responseBuilder.withData("tables", String.join(", ", listTablesResponse.tableNames()));
             } else {
-                responseBuilder.down().withData("error", "No tables found");
+                responseBuilder.down().withData("error", "No tables found " + configProperties.getDynamoRegion());
             }
         } catch (DynamoDbException e) {
             return responseBuilder.down()
