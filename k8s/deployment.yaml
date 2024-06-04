@@ -1,20 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: catalog-microservice
-  annotations:
-    prometheus.io/scrape: 'true'
-    prometheus.io/path: '/products/metrics'
-    prometheus.io/port: '8080'
+  name: catalog-microservices
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: catalog-microservice
+      app: catalog-microservices
   template:
     metadata:
       labels:
-        app: catalog-microservice
+        app: catalog-microservices
     spec:
       containers:
         - name: catalog-microservice
@@ -32,4 +28,6 @@ spec:
                 secretKeyRef:
                   name: aws-credentials
                   key: AWS_SECRET_ACCESS_KEY
-
+          resources:
+            limits:
+              memory: "512Mi"

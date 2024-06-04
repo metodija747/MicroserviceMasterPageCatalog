@@ -91,11 +91,6 @@
                 <version>2.3.0</version>
             </dependency>
             <dependency>
-                <groupId>com.kumuluz.ee.metrics</groupId>
-                <artifactId>kumuluzee-metrics-logstash</artifactId>
-                <version>2.3.0</version>
-            </dependency>
-            <dependency>
                 <groupId>com.kumuluz.ee.fault.tolerance</groupId>
                 <artifactId>kumuluzee-fault-tolerance-smallrye</artifactId>
                 <version>2.1.1</version>
