@@ -2,21 +2,20 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: catalog-microservice
-  namespace: ingress-basic
   annotations:
-    kubernetes.io/ingress.class: "nginx"
     nginx.ingress.kubernetes.io/enable-cors: "true"
     nginx.ingress.kubernetes.io/cors-allow-methods: "GET, PUT, POST, DELETE, PATCH, OPTIONS"
     nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
     nginx.ingress.kubernetes.io/cors-allow-origin: "*"
 spec:
+  ingressClassName: "nginx"  # Replace deprecated annotation
   rules:
-    - http:
-        paths:
-          - pathType: Prefix
-            path: "/products"
-            backend:
-              service:
-                name: catalog-microservice
-                port:
-                  number: 80
+  - http:
+      paths:
+      - pathType: Prefix
+        path: "/products"
+        backend:
+          service:
+            name: catalog-microservice
+            port:
+              number: 80

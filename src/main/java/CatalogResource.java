@@ -65,8 +65,7 @@ public class CatalogResource {
     private volatile String currentRegion;
     private volatile String currentTableName;
     private void checkAndUpdateDynamoDbClient() {
-//        String newRegion = configProperties.getDynamoRegion();
-        String newRegion = "us-east-1";
+        String newRegion = configProperties.getDynamoRegion();
 
         if (!newRegion.equals(currentRegion)) {
             try {
@@ -79,8 +78,7 @@ public class CatalogResource {
                 throw new WebApplicationException("Error while creating DynamoDB client: " + e.getMessage(), e, Response.Status.INTERNAL_SERVER_ERROR);
             }
         }
-//        currentTableName = configProperties.getTableName();
-        currentTableName = "ProductCatalog";
+        currentTableName = configProperties.getTableName();
     }
 
 
@@ -111,10 +109,10 @@ public class CatalogResource {
     @Timed(name = "getProductsTime", description = "Time taken to fetch products")
     @Metered(name = "getProductsMetered", description = "Rate of getProducts calls")
     @ConcurrentGauge(name = "getProductsConcurrent", description = "Concurrent getProducts calls")
-    @Timeout(value = 50, unit = ChronoUnit.SECONDS) // Timeout after 50 seconds
-    @Retry(maxRetries = 3) // Retry up to 3 times
-    @Fallback(fallbackMethod = "getProductsFallback") // Fallback method if all retries fail
-    @CircuitBreaker(requestVolumeThreshold = 4, failureRatio = 0.5, delay = 2000)
+    @Timeout(value = 900, unit = ChronoUnit.SECONDS)
+    @Retry(maxRetries = 3)
+    @Fallback(fallbackMethod = "getProductsFallback")
+    @CircuitBreaker(requestVolumeThreshold = 4, delay = 30000)
 //    @Bulkhead(100)
     @Traced
     public Response getProducts(@QueryParam("searchTerm") String searchTerm,
@@ -145,7 +143,6 @@ public class CatalogResource {
             String filterExpression = "";
             Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
 
-            // Capitalize first letter of each word in searchTerm
             if (searchTerm != null && !searchTerm.isEmpty()) {
                 String[] words = searchTerm.split(" ");
                 StringBuilder filterExpressionBuilder = new StringBuilder();
@@ -277,7 +274,7 @@ public class CatalogResource {
     @Retry(maxRetries = 3) // Retry up to 3 times
     @Fallback(fallbackMethod = "getProductFallback") // Fallback method if all retries fail
     @CircuitBreaker(requestVolumeThreshold = 4, failureRatio = 0.5, delay = 2000)
-//    @Bulkhead(100) // Limit concurrent calls to 5
+//    @Bulkhead(100)
     @Traced
     public Response getProduct(
             @PathParam("productId") String productId) {
