@@ -103,4 +103,4 @@ kumuluzee:
 aws-config:
   dynamo-region: us-east-1
   table-name: ProductCatalog
-  cognito-issuer: https://cognito-idp.us-east-1.amazonaws.com/us-east-1_cl8iVMzUw
+  cognito-issuer: https://cognito-idp.us-east-1.amazonaws.com/us-east-1_7pGhc7VeN
