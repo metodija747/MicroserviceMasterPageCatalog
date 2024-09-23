@@ -258,7 +258,7 @@ public class CatalogResource {
     @GET
     @Operation(summary = "Get Product Details", description = "This endpoint allows users to get details of a specific product in the catalog by its productId.")
     @Parameters({
-            @Parameter(description = "Unique identifier for the product", required = true, example = "a9abe32e-9bd6-43aa-bc00-9044a27b858b")
+            @Parameter(description = "Unique identifier for the product", required = true, example = "33c08f3a-f764-493d-988a-6ceb4a78d25d")
     })
     @APIResponses({
             @APIResponse(responseCode = "200", description = "Successfully obtained product details."),
@@ -466,7 +466,7 @@ public class CatalogResource {
             name = "productId",
             in = ParameterIn.PATH,
             description = "Product ID",
-            example = "a9abe32e-9bd6-43aa-bc00-9044a27b858b"
+            example = "33c08f3a-f764-493d-988a-6ceb4a78d25d"
     )
     @Parameter(
             name = "avgRating",
@@ -589,7 +589,7 @@ public class CatalogResource {
             @APIResponse(responseCode = "404", description = "Product not found"),
             @APIResponse(responseCode = "500", description = "Internal Server Error")
     })
-    @Parameter(name = "productId", in = ParameterIn.PATH, description = "ID of the product to be deleted", required = true, example = "a9abe32e-9bd6-43aa-bc00-9044a27b858b")
+    @Parameter(name = "productId", in = ParameterIn.PATH, description = "ID of the product to be deleted", required = true, example = "33c08f3a-f764-493d-988a-6ceb4a78d25d")
     @Path("/{productId}")
     @Counted(name = "deleteProductCount", description = "Count of deleteProduct calls")
     @Timed(name = "deleteProductTime", description = "Time taken to delete a product")
